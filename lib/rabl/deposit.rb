@@ -172,7 +172,11 @@ module Rabl
     end
 
     def scoop
-    
+      
+      include Rails.application.routes.url_helpers
+      include Rails.application.routes.mounted_helpers
+      
+      
       ActiveRecord::Base.connection.enable_query_cache!
     
       Rabl::Database::Transaction.block( self.transaction_enable ) do
@@ -524,10 +528,6 @@ module Rabl
     end
   
   end
-  
-end
-
-class Rabl < DataShovel
   
 end
 
