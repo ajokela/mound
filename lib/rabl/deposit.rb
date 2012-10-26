@@ -164,6 +164,8 @@ module Rabl
           end
         end
       end
+      
+      $stderr.puts self.data.inspect
         
       # open wide - this will generate a LOT of SQL output if enabled.
     
