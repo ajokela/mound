@@ -157,8 +157,8 @@ module Rabl
         if self.data.include? key
           if key == "_config"
             if self.data[key].class == Hash
-              if self.data[key]['include'].class == Array
-                self.data[key]['include'].each do |file|
+              if self.data[key]['include_before'].class == Array
+                self.data[key]['include_before'].each do |file|
                   preloaded_data.merge!(YAML.load_file(File.join(path, file)))
                 end
               end
@@ -169,7 +169,21 @@ module Rabl
       
       preloaded_data.merge!(self.data)
       self.data = preloaded_data
-      
+
+      SPECIAL_KEYS.each do |key,val|
+        if self.data.include? key
+          if key == "_config"
+            if self.data[key].class == Hash
+              if self.data[key]['include_after'].class == Array
+                self.data[key]['include_after'].each do |file|
+                  self.data.merge!(YAML.load_file(File.join(path, file)))
+                end
+              end
+            end
+          end
+        end
+      end
+            
       # open wide - this will generate a LOT of SQL output if enabled.
     
       ActiveRecord::Base.logger = Logger.new(STDOUT) if self.debug > 3
