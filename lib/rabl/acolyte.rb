@@ -1,6 +1,6 @@
-module RABL
+module Rabl
   
-  module Database  
+  module Database
     module Transaction
       
       def self.block(enable, &b)

@@ -1,11 +1,22 @@
+$:.push File.expand_path("../lib", __FILE__)
+
+# Maintain your gem's version:
+require "rabl/version"
+
+# Describe your gem and declare its dependencies:
 Gem::Specification.new do |s|
-  s.name    = "rabl"
-  s.version     = '0.1'
-  s.date        = '2012-10-25'
-  s.summary     = "YML Data + MetaProgrammery = RABL"
-  s.description = "Data and the sugar for describing relationships between these data"
-  s.authors     = ["Alex Jokela", "Peter Clark"]
-  s.email       = 'ajokela@umn.edu'
-  s.files       = ['lib/rabl.rb']
-  s.homepage    = 'http://users.pop.umn.edu/~ajokela/#RABL'
+  s.name        = "rabl"
+  s.version     = Rabl::VERSION
+  s.authors     = ["TODO: Your name"]
+  s.email       = ["TODO: Your email"]
+  s.homepage    = "TODO"
+  s.summary     = "TODO: Summary of Rabl."
+  s.description = "TODO: Description of Rabl."
+
+  s.files = Dir["{app,config,db,lib}/**/*"] + ["MIT-LICENSE", "Rakefile", "README.rdoc"]
+  s.test_files = Dir["test/**/*"]
+
+  s.add_dependency "rails", "~> 3.2.8"
+
+  s.add_development_dependency "sqlite3"
 end
