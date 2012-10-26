@@ -234,14 +234,6 @@ module Rabl
         
             $stderr.puts ""
           
-          else
-          
-            if key == "post_build"
-            
-              _post_build(dat)
-            
-            end
-        
           end
         
         end
@@ -251,19 +243,6 @@ module Rabl
     end
       
     private 
-  
-    def _post_build(dat)
-      _build_associations(dat)
-    end
-
-    def _build_associations(dat)
-    
-      dat.each do |key,d|
-        $stderr.puts d.inspect
-      end
-    
-    end
-
   
     # load all the records for one entity type.
     # if requires_extra_work is false, they can be inserted directly.
@@ -344,6 +323,11 @@ module Rabl
             resolved_val = _resolve_ids(key, v, "OR", record_obj.class)  
             key = key + "_id"
           end
+          
+        elsif key.match /^_all$/
+          
+          $stderr.puts key + " => " + v.inspect
+          
         else
           resolved_val = v
         end
