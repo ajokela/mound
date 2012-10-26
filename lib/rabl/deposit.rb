@@ -250,6 +250,9 @@ module Rabl
     def _load_data(dat, obj)
       $stderr.puts("Creating a new Cache for instances of #{obj}") if self.debug > 1
       cache = ActiveSupport::Cache::MemoryStore.new()
+      
+      $stderr.puts "Data for instances of #{obj}: \n\n" + dat.inspect + "\n\n" if self.debug > 3
+      
       dat.each do |row|
         ar = obj.new
         _load_single_instance(ar, row, cache)
