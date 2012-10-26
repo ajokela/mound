@@ -1,6 +1,2 @@
 require 'rabl/version'
-require 'rabl/rabl'
-
-module Rabl
-
-end
+require 'rabl/deposit'
