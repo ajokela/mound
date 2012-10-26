@@ -173,8 +173,8 @@ module Rabl
 
     def scoop
       
-      include Rails.application.routes.url_helpers
-      include Rails.application.routes.mounted_helpers
+      extend Rails.application.routes.url_helpers
+      extend Rails.application.routes.mounted_helpers
       
       
       ActiveRecord::Base.connection.enable_query_cache!
