@@ -263,7 +263,8 @@ module Rabl
     
       dat.each do |k,v|
         key = k.downcase
-
+        do_not_send = false
+        
         $stderr.puts("TRACE: _load_single_instance top: key:#{key}, v:#{v}") if self.debug > 2
       
         if key.match /_id$/
@@ -327,6 +328,7 @@ module Rabl
         elsif key.match /^_all$/
           
           $stderr.puts key + " => " + v.inspect
+          do_not_send = true
           
         else
           resolved_val = v
@@ -335,7 +337,10 @@ module Rabl
         # now that we've got the key and value for this field, set it on the object.
         $stderr.puts("TRACE: setting #{key} to: #{resolved_val}") if self.debug > 3
       
-        record_obj.send(key + "=", resolved_val)
+        unless do_not_send
+          record_obj.send(key + "=", resolved_val)
+        end
+        
       end
     
       # after processing all the elements for this object in the yaml file, save the object.
