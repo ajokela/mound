@@ -7,16 +7,16 @@ require "rabl/version"
 Gem::Specification.new do |s|
   s.name        = "rabl"
   s.version     = Rabl::VERSION
-  s.authors     = ["TODO: Your name"]
-  s.email       = ["TODO: Your email"]
-  s.homepage    = "TODO"
-  s.summary     = "TODO: Summary of Rabl."
-  s.description = "TODO: Description of Rabl."
+  s.authors     = ["Alex Jokela", "Peter Clark"]
+  s.email       = ["ajokela@umn.edu", "pclark@umn.edu"]
+  s.homepage    = ""
+  s.summary     = "Ruby Abstract Bulk Loader"
+  s.description = "Metaprogramming sugar for human-readable data relation building and ingesting"
 
-  s.files = Dir["{app,config,db,lib}/**/*"] + ["MIT-LICENSE", "Rakefile", "README.rdoc"]
+  s.files = Dir["{app,config,db,lib}/**/*"] + ["LICENSE", "Rakefile", "README.rdoc"]
   s.test_files = Dir["test/**/*"]
 
-  s.add_dependency "rails", "~> 3.2.8"
+  s.add_dependency "rails", "=> 3.2.8"
 
-  s.add_development_dependency "sqlite3"
+  #s.add_development_dependency "sqlite3"
 end
