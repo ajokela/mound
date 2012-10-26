@@ -145,6 +145,8 @@ module Rabl
     def initialize(*options)
       self.options = _config(options)
     
+      preloaded_data = {}
+    
       Rabl::Utilities.wait_spinner {
         self.data = YAML.load_file( self.options[:file] )
       }
@@ -157,7 +159,7 @@ module Rabl
             if self.data[key].class == Hash
               if self.data[key]['include'].class == Array
                 self.data[key]['include'].each do |file|
-                  self.data.merge!(YAML.load_file(File.join(path, file)))
+                  preloaded_data.merge!(YAML.load_file(File.join(path, file)))
                 end
               end
             end
@@ -165,8 +167,9 @@ module Rabl
         end
       end
       
-      $stderr.puts self.data.inspect
-        
+      preloaded_data.merge!(self.data)
+      self.data = preloaded_data
+      
       # open wide - this will generate a LOT of SQL output if enabled.
     
       ActiveRecord::Base.logger = Logger.new(STDOUT) if self.debug > 3
