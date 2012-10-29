@@ -223,7 +223,7 @@ module Rabl
         
               # Get the class object for the class named 'name'.
               obj = name.constantize
-              obj.delete_all if options[:delete_all]
+              # obj.delete_all if options[:delete_all]
             rescue Exception => e
               $stderr.puts "#{e}"
             end
