@@ -202,15 +202,6 @@ module Rabl
       
         $stderr.puts ""
       
-        #if options[:delete_all]
-        #  
-        #  Hash[data.reverse_each.map{|e| e}].each do |key,dat|
-        #    obj = key.singularize.camelize.constantize
-        #    obj.delete_all
-        #  end
-        #  
-        #end
-      
         data.each do |key,dat|
         
           unless SPECIAL_KEYS.include? key
@@ -387,9 +378,7 @@ module Rabl
           if v.class == Hash
           
             v.each do |sub_key, sub_val|
-            
               vals[sub_key] = _resolve_ids(sub_key, sub_val)
-            
             end
           
           else
@@ -441,11 +430,8 @@ module Rabl
           else
           
             message = "ERROR:\n\n".color(:red).bright
-          
             message << "The following query returned #{val_obj.count} records:\n\n"
-          
             message << val_obj.to_sql 
-          
             message << "\n\n"
           
             raise message
