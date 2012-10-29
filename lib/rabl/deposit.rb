@@ -340,7 +340,7 @@ module Rabl
             v.each do |items|
               if items.class == Hash
                 all.each do |single_obj|
-                  _load_single_instance(single_obj, item, cache)
+                  _load_single_instance(single_obj, items, cache)
                 end
               end
             end
