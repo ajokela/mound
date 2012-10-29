@@ -251,12 +251,13 @@ module Rabl
       $stderr.puts("Creating a new Cache for instances of #{obj}") if self.debug > 1
       cache = ActiveSupport::Cache::MemoryStore.new()
       
-      $stderr.puts "Data for instances of #{obj}: \n\n" + dat.inspect + "\n\n" if self.debug > 3
+      # $stderr.puts "Data for instances of #{obj}: \n\n" + dat.inspect + "\n\n" if self.debug > 3
       
       dat.each do |row|
         ar = obj.new
         _load_single_instance(ar, row, cache)
       end
+      
     end
     
     # Load a single record for one entity type.
@@ -330,7 +331,25 @@ module Rabl
           
         elsif key.match /^_all$/
           
-          $stderr.puts key + " => " + v.inspect
+          # we are going to update all items
+          
+          if v.class == Array
+            
+            all = record_obj.class.where({})
+            
+            v.each do |items|
+              if items.class == Hash
+                all.each do |single_obj|
+                  _load_single_instance(single_obj, item, cache)
+                end
+              end
+            end
+            
+            # _all => [{"topic_ids"=>["DEMO"]}]
+            # $stderr.puts "++> " + key + " => " + v.inspect
+          
+          end
+          
           do_not_send = true
           
         else
