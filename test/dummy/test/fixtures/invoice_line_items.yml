@@ -1,0 +1,26 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/Fixtures.html
+
+--- !omap
+- one:
+    description: My First Item
+    invoice: one
+
+- two:
+    description: My Second Item
+    invoice: one
+
+- three:
+    description: My Parent Item
+    invoice: two
+- kid1:
+    description: My Subitem1
+    invoice: two
+    parent: three
+- kid2:
+    description: My Subitem2
+    invoice: two
+    parent: three
+- kid3:
+    description: My Subitem3
+    invoice: two
+    parent: three

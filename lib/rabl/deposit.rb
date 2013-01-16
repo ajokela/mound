@@ -285,7 +285,7 @@ module Rabl
               resolved_val = _resolve_ids(key, v)
             else
               $stderr.puts("TRACE: #{key} points to foreign key #{foreign_table}") if self.debug > 2
-              foreign_table_id = foreign_table.downcase + "_id"
+              foreign_table_id = foreign_table.underscore + "_id"
               $stderr.puts("TRACE: Trying to resolve #{key} as if it were #{foreign_table_id}") if self.debug > 1
               resolved_val = _resolve_ids(foreign_table_id, v)
               $stderr.puts("TRACE: Found #{resolved_val}.") if self.debug > 2

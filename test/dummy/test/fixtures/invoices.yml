@@ -1,0 +1,11 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/Fixtures.html
+
+one:
+  description: basic
+  price: 9.99
+  invoice_type: cash
+
+two:
+  description: with child items
+  price: 19.99
+  invoice_type: credit
