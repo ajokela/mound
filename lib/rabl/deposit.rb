@@ -42,11 +42,11 @@ require 'rabl/string_ext'
 
 #########
 #
-#  DataShovel 
+#  Rabl 
 #
-#  A "DataShovel" object requires a hash of options passed the call to "new"
+#  A "Rabl" object requires a hash of options passed the call to "new"
 #
-#    :file => "relative path to the data file in a DataShovel-DSL-YAML-format"
+#    :file => "relative path to the data file in a Rabl-DSL-YAML-format"
 #    :delete_all => true/false to delete all existing records before loading
 #    :search_columns => a hash of symbols specifying valid column names to search for matching record columns
 #
