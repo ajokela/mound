@@ -38,6 +38,7 @@
 
 require 'rainbow'
 require 'rabl/acolyte'
+require 'rabl/string_ext'
 
 #########
 #
@@ -136,7 +137,7 @@ module Rabl
     #include Rails.application.routes.url_helpers
     #include Rails.application.routes.mounted_helpers
   
-    attr_accessor :data, :objects, :search_columns, :special_search_column_logic, :special_columns
+    attr_accessor :data, :objects, :exclude_columns, :search_columns, :special_search_column_logic, :special_columns
     attr_accessor :issues, :options, :debug, :dry_run, :cache_enabled, :transaction_enable
   
     VALID_OPERS       = { :or => true, :and => true }
@@ -189,6 +190,10 @@ module Rabl
       ActiveRecord::Base.logger = Logger.new(STDOUT) if self.debug > 3
     
     end
+    
+    def dump
+      self.data
+    end
 
     def scoop
       
@@ -239,7 +244,7 @@ module Rabl
     # if requires_extra_work is false, they can be inserted directly.
     # If it's true, then call _load_single_instance which can look up the appropriate foreign keys and do the insert.
     def _load_data(dat, obj)
-      $stderr.puts("Creating a new Cache for instances of #{obj}") if self.debug > 1
+      $stderr.puts( __LINE__.to_s + " " + "Creating a new Cache for instances of #{obj}") if self.debug > 1
       cache = ActiveSupport::Cache::MemoryStore.new()
       
       # $stderr.puts "Data for instances of #{obj}: \n\n" + dat.inspect + "\n\n" if self.debug > 3
@@ -260,22 +265,24 @@ module Rabl
         key = k.downcase
         do_not_send = false
         
-        $stderr.puts("TRACE: _load_single_instance top: key:#{key}, v:#{v}") if self.debug > 2
+        $stderr.puts( __LINE__.to_s + " " + "TRACE: _load_single_instance top: key:#{key}, v:#{v}") if self.debug > 2
       
         if key.match /_id$/
           # we need to go find a single foreign key value. Cache it if we can.
           if self.cache_enabled & cache.exist?(v)
-            $stderr.puts("Found #{key}:#{v} in the cache") if self.debug > 2
+            $stderr.puts( __LINE__.to_s + " " + "Found #{key}:#{v} in the cache") if self.debug > 2
             resolved_val = cache.read(v)
           else
             # TODO - if record_obj.association(:k).reflection.options(:class_name) is not null, then we need to use that as the class name for doing the lookup.
             k_sym = k.sub(/_id$/, '').intern
             # check to make sure that there's actually an AR association in place before trying to resolve it.
           
+            $stderr.puts __LINE__.to_s + " #{v.inspect} | #{v.class}"
+            
             foreign_table_assoc = record_obj.class.reflect_on_association(k_sym)
           
             if foreign_table_assoc.nil?
-              $stderr.puts("WARN: #{key} doesn't have a matching association - are you missing a has_many or belongs_to in #{record_obj.class}?")
+              $stderr.puts( __LINE__.to_s + " " + "WARN: #{key} doesn't have a matching association - are you missing a has_many or belongs_to in #{record_obj.class}?")
               foreign_table = nil
             else
               foreign_table = record_obj.association(k_sym).reflection.options[:class_name]
@@ -284,11 +291,11 @@ module Rabl
             if (foreign_table.nil?)
               resolved_val = _resolve_ids(key, v)
             else
-              $stderr.puts("TRACE: #{key} points to foreign key #{foreign_table}") if self.debug > 2
+              $stderr.puts( __LINE__.to_s + " " + "TRACE: #{key} points to foreign key #{foreign_table}") if self.debug > 2
               foreign_table_id = foreign_table.underscore + "_id"
-              $stderr.puts("TRACE: Trying to resolve #{key} as if it were #{foreign_table_id}") if self.debug > 1
+              $stderr.puts( __LINE__.to_s + " " + "TRACE: Trying to resolve #{key} as if it were #{foreign_table_id}") if self.debug > 1
               resolved_val = _resolve_ids(foreign_table_id, v)
-              $stderr.puts("TRACE: Found #{resolved_val}.") if self.debug > 2
+              $stderr.puts( __LINE__.to_s + " " + "TRACE: Found #{resolved_val}.") if self.debug > 2
             end
             cache.write(v, resolved_val) if self.cache_enabled
           end
@@ -296,12 +303,12 @@ module Rabl
           # Look for has_many_and_belongs_to_many relationships
           key_stub = key.sub(/_ids$/, '')
           to_many_key = key_stub.singularize.camelize
-          $stderr.puts("TRACE: k: #{to_many_key}, v: #{v}") if self.debug > 3
+          $stderr.puts( __LINE__.to_s + " " + "TRACE: k: #{to_many_key}, v: #{v}") if self.debug > 3
 
           # get the subkeys for each element of the value
           if v.class == Array
             subkeys = v.collect { |subv| _resolve_ids(to_many_key, subv) }
-            $stderr.puts("TRACE: subkeys for #{to_many_key} are: #{subkeys}") if self.debug > 3
+            $stderr.puts( __LINE__.to_s + " " + "TRACE: subkeys for #{to_many_key} are: #{subkeys}") if self.debug > 3
           end
       
           # set up state for the record_obj.send call below.
@@ -336,9 +343,6 @@ module Rabl
               end
             end
             
-            # _all => [{"topic_ids"=>["DEMO"]}]
-            # $stderr.puts "++> " + key + " => " + v.inspect
-          
           end
           
           do_not_send = true
@@ -348,7 +352,7 @@ module Rabl
         end
       
         # now that we've got the key and value for this field, set it on the object.
-        $stderr.puts("TRACE: setting #{key} to: #{resolved_val}") if self.debug > 3
+        $stderr.puts( __LINE__.to_s + " " + "TRACE: setting #{key} to: #{resolved_val}") if self.debug > 3
       
         unless do_not_send
           record_obj.send(key + "=", resolved_val)
@@ -369,26 +373,89 @@ module Rabl
         bool_oper = "OR"
       end
     
+      ######
+      #
+      #  If we have an Array, we need to see if it is an Array of Strings or an Array of Hashes
+      #
+      
       if val.class == Array
-      
-        vals = {}
-      
-        val.each do |v|
         
-          if v.class == Hash
+        contains = []
+        
+        val.each{|item|
+          contains << item.class
+        }
+        
+        contains.uniq!
+        
+        if contains.length > 1
+          raise "Attempting to resolve compound keys, but the array of values was of mixed types (e.g. Hash and Strings, etc) | Complete Information: key => '#{key}', val => '#{val.inspect}', obj => '#{obj.inspect}'"
+        end
+        
+        vals = {}
+        
+        if contains.first == Hash
+        
+          val.each do |v|
           
             v.each do |sub_key, sub_val|
               vals[sub_key] = _resolve_ids(sub_key, sub_val)
             end
-          
-          else
-            raise "#{v} invalid syntax; expected Hash but found #{v.class.to_s}"  
+
           end
-                
+      
+          $stderr.puts "TRACE: Complete Information: key => '#{key}', val => '#{val.inspect}', obj => '#{obj.inspect}'" if self.debug > 4
+          
+          return _resolve_ids(key, vals, 'AND') # vals
+          
+        elsif contains.first == String
+          
+          # vals = {key => val}
+          
+          if obj.nil?
+            class_name = key.sub(/_id$/, '').singularize.camelize
+            obj = class_name.constantize
+          end
+          
+          ar = obj.new
+          combination_keys = ar.attributes.keys.keep_if{|column| column.match(exclude_columns).nil? }.combination(val.size).to_a
+          
+          #array_of_hashes = []
+          
+          #permutation_keys.each{|set|
+          #  hash = {}
+          #  idx  = 0
+          #  set.each{|item|
+          #    hash[item] = val[idx]
+          #    idx += 1
+          #  }
+          #  array_of_hashes << hash
+          #}
+          
+          sets = []
+          
+          combination_keys.each{|set|
+            str = "(" + set.join(" = ? AND ") + " = ?)"
+            sets << str
+          }
+          
+          query = sets.join(" OR ")
+          values = val * combination_keys.size
+          
+          sql = obj.where([query, *values]).to_sql
+          
+          ret = obj.where([query, *values]).to_a
+          
+          # raise "Complete Information: key => '#{key}',\n combination_keys => '#{combination_keys.inspect}',\n val => '#{val.inspect}',\n obj => '#{obj.inspect}'\n query => '#{query}',\n values => '#{values}'\n sql => '#{sql}'\n ret => '#{ret.inspect}' "
+          
+          unless ret.size == 1
+            raise "ERROR: Attempting to locate a single #{obj.class} returned #{ret.size}, should be only 1\n\n" +
+                  "Complete Information: key => '#{key}',\n combination_keys => '#{combination_keys.inspect}',\n val => '#{val.inspect}',\n obj => '#{obj.inspect}'\n query => '#{query}',\n values => '#{values}'\n sql => '#{sql}'\n ret => '#{ret.inspect}' ".color(:red).bright
+          end
+            
+          return ret.first.id
         end
-      
-        return _resolve_ids(key, vals, 'AND') # vals
-      
+        
       else
     
         if obj.nil?
@@ -414,8 +481,13 @@ module Rabl
           # construct a WHERE clause to deal with looking up the foreign key requested in the call
           where_str = keys.join(" = ? #{bool_oper} ") + " = ?"
 
-          vals      = ([val.to_s] * keys.size)      
+          vals      = ([val.to_s] * keys.size)
+          
+          $stderr.puts "TRACE: " + __LINE__.to_s + " " + obj.where([where_str, *vals]).to_sql if self.debug > 4
+          
           val_obj   = obj.where([where_str, *vals])
+        
+          # raise obj.where([where_str, *vals]).to_sql
         
         else
         
@@ -502,7 +574,13 @@ module Rabl
       else
         self.special_search_column_logic = options[:special_search_column_logic]
       end
-    
+      
+      unless options[:exclude_columns]
+        self.exclude_columns = /(^created_at$)|(^updated_at$)|(_id$)/
+      else
+        self.exclude_columns = options[:exclude_columns]
+      end
+      
       unless options[:special_columns]
         self.special_columns = []
       else

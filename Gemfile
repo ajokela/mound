@@ -22,6 +22,7 @@ group :test do
   gem "rspec-rails"
   gem 'simplecov'
   gem 'ci_reporter'
+  gem 'activerecord-jdbcsqlite3-adapter'
 end
 
 # To use debugger

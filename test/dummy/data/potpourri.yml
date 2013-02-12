@@ -1,0 +1,7 @@
+_config:
+  # special way of including additional data
+  include_before:
+    - 'invoice_types.yml'
+    - 'invoices.yml'
+    - 'invoice_line_items.yml'
+  include_after:

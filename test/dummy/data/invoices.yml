@@ -1,0 +1,13 @@
+
+invoices:
+  - 
+    name: one
+    description: basic
+    price: 9.99
+    invoice_type_id: cash
+
+  - 
+    name: two
+    description: with child items
+    price: 19.99
+    invoice_type_id: credit
