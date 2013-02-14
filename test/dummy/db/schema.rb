@@ -14,6 +14,7 @@
 ActiveRecord::Schema.define(:version => 20130116214246) do
 
   create_table "invoice_line_items", :force => true do |t|
+    t.string   "name"
     t.string   "description"
     t.integer  "invoice_id"
     t.integer  "parent_id"
@@ -22,6 +23,7 @@ ActiveRecord::Schema.define(:version => 20130116214246) do
   end
 
   add_index "invoice_line_items", ["invoice_id"], :name => "index_invoice_line_items_on_invoice_id"
+  add_index "invoice_line_items", ["parent_id"], :name => "index_invoice_line_items_on_parent_id"
 
   create_table "invoice_types", :force => true do |t|
     t.string   "name"
@@ -30,6 +32,7 @@ ActiveRecord::Schema.define(:version => 20130116214246) do
   end
 
   create_table "invoices", :force => true do |t|
+    t.string   "name"
     t.string   "description"
     t.decimal  "price"
     t.integer  "invoice_type_id"

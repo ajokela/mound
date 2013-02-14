@@ -1,0 +1,35 @@
+
+invoice_line_items:
+  - 
+    name: one
+    description: My First Item
+    invoice_id: one
+
+  - 
+    name: two
+    description: My Second Item
+    invoice_id: one
+
+  - 
+    name: three
+    description: My Parent Item
+    invoice_id: two
+
+  - 
+    name: kid1
+    description: My Subitem1
+    invoice_id: ['two', 'with child items']
+        
+    parent: three
+
+  - 
+    name: kid2
+    description: My Subitem2
+    invoice_id: two
+    parent: three
+  
+  - 
+    name: kid3
+    description: My Subitem3
+    invoice_id: two
+    parent: three

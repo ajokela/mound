@@ -1,0 +1,6 @@
+
+invoice_types:
+  -
+    name: cash
+  -
+    name: credit
