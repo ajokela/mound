@@ -1,4 +1,5 @@
 
+---
 invoice_line_items:
   - 
     name: one
@@ -18,7 +19,10 @@ invoice_line_items:
   - 
     name: kid1
     description: My Subitem1
-    invoice_id: ['two', 'with child items']
+    invoice_id: 
+      - 'two'
+      - 'with child items'
+      - invoice_type_id: 'credit'
         
     parent: three
 

@@ -188,6 +188,8 @@ module Rabl
       # open wide - this will generate a LOT of SQL output if enabled.
     
       ActiveRecord::Base.logger = Logger.new(STDOUT) if self.debug > 3
+      
+      $stderr.puts "data:\n\n#{self.data}\n\n"if self.debug > 3
     
     end
     
@@ -386,15 +388,15 @@ module Rabl
           contains << item.class
         }
         
-        contains.uniq!
+        #contains.uniq!
         
-        if contains.length > 1
-          raise "Attempting to resolve compound keys, but the array of values was of mixed types (e.g. Hash and Strings, etc) | Complete Information: key => '#{key}', val => '#{val.inspect}', obj => '#{obj.inspect}'"
-        end
+        #if contains.length > 1
+        #  raise "Attempting to resolve compound keys, but the array of values was of mixed types (e.g. Hash and Strings, etc) | Complete Information: key => '#{key}', val => '#{val.inspect}', obj => '#{obj.inspect}', contains => #{contains}"
+        # end
         
         vals = {}
         
-        if contains.first == Hash
+        if contains.size == 1 and contains.first == Hash
         
           val.each do |v|
           
@@ -408,7 +410,33 @@ module Rabl
           
           return _resolve_ids(key, vals, 'AND') # vals
           
-        elsif contains.first == String
+        else
+          
+          if contains.include? Array
+            raise "An Array element was detected within a compound key; | Complete Information: key => '#{key}', val => '#{val.inspect}', obj => '#{obj.inspect}', contains => #{contains}"
+          end
+          
+          strings = []
+          
+          val.each{|item|
+            if item.class == String
+              strings << item
+            elsif item.class == Hash
+              
+              item.each{|item_k,item_v|
+                $stderr.puts "\n\n====> item_k: #{item_k} | item_v: #{item_v}\n\n"
+                
+                strings << _resolve_ids(item_k, item_v)
+                
+                $stderr.puts "====> item_ret: #{item_ret}" if self.debug > 4
+              }
+              
+            end
+          }
+          
+          vals = strings
+          
+          #elsif contains.first == String
           
           # vals = {key => val}
           
@@ -420,19 +448,9 @@ module Rabl
           ar = obj.new
           combination_keys = ar.attributes.keys.keep_if{|column| column.match(exclude_columns).nil? }.combination(val.size).to_a
           
-          #array_of_hashes = []
-          
-          #permutation_keys.each{|set|
-          #  hash = {}
-          #  idx  = 0
-          #  set.each{|item|
-          #    hash[item] = val[idx]
-          #    idx += 1
-          #  }
-          #  array_of_hashes << hash
-          #}
-          
           sets = []
+          
+          $stderr.puts "=====> combination_keys: #{combination_keys.inspect}"
           
           combination_keys.each{|set|
             str = "(" + set.join(" = ? AND ") + " = ?)"
@@ -440,13 +458,15 @@ module Rabl
           }
           
           query = sets.join(" OR ")
-          values = val * combination_keys.size
+          values = vals * combination_keys.size
           
           sql = obj.where([query, *values]).to_sql
           
           ret = obj.where([query, *values]).to_a
           
-          # raise "Complete Information: key => '#{key}',\n combination_keys => '#{combination_keys.inspect}',\n val => '#{val.inspect}',\n obj => '#{obj.inspect}'\n query => '#{query}',\n values => '#{values}'\n sql => '#{sql}'\n ret => '#{ret.inspect}' "
+          # raise "Complete Information: key => '#{key}',\n combination_keys => '#{combination_keys.inspect}',\n val => '#{val.inspect}',\n obj => '#{obj.inspect}'\n query => '#{query}',\n values => '#{values}'\n sql => '#{sql}'" 
+          
+          #\n ret => '#{ret.inspect}' "
           
           unless ret.size == 1
             raise "ERROR: Attempting to locate a single #{obj.class} returned #{ret.size}, should be only 1\n\n" +
@@ -454,6 +474,7 @@ module Rabl
           end
             
           return ret.first.id
+        
         end
         
       else
@@ -576,7 +597,7 @@ module Rabl
       end
       
       unless options[:exclude_columns]
-        self.exclude_columns = /(^created_at$)|(^updated_at$)|(_id$)/
+        self.exclude_columns = /(^created_at$)|(^updated_at$)/
       else
         self.exclude_columns = options[:exclude_columns]
       end
