@@ -1,6 +1,7 @@
 _config:
   # special way of including additional data
   include_before:
+    - 'vehicles.yml'
     - 'invoice_types.yml'
     - 'invoices.yml'
     - 'invoice_line_items.yml'

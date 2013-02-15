@@ -4,6 +4,7 @@ class CreateInvoiceLineItems < ActiveRecord::Migration
       t.string     :name
       t.string     :description
       t.references :invoice
+      t.references :vehicle, :default => nil
       t.integer    :parent_id, :default => nil
       t.timestamps
     end

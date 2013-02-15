@@ -249,7 +249,7 @@ module Rabl
       $stderr.puts( __LINE__.to_s + " " + "Creating a new Cache for instances of #{obj}") if self.debug > 1
       cache = ActiveSupport::Cache::MemoryStore.new()
       
-      # $stderr.puts "Data for instances of #{obj}: \n\n" + dat.inspect + "\n\n" if self.debug > 3
+      $stderr.puts "Data for instances of #{obj}: \n\n" + dat.inspect + "\n\n" if self.debug > 3
       
       dat.each do |row|
         ar = obj.new
@@ -595,39 +595,39 @@ module Rabl
       else
         self.special_search_column_logic = options[:special_search_column_logic]
       end
-      
-      unless options[:exclude_columns]
-        self.exclude_columns = /(^created_at$)|(^updated_at$)/
-      else
+
+      if options[:exclude_columns]
         self.exclude_columns = options[:exclude_columns]
-      end
-      
-      unless options[:special_columns]
-        self.special_columns = []
       else
+        self.exclude_columns = /(^created_at$)|(^updated_at$)/
+      end
+
+      if options[:special_columns]
         self.special_columns = options[:special_columns]
+      else
+        self.special_columns = []
       end
     
       if self.issues.size > 0
         raise "Error(s): " + issues.join("\n")
       end
-    
-      unless options[:cache_enabled]
-        self.cache_enabled = false
-      else
+
+      if options[:cache_enabled]
         self.cache_enabled = options[:cache_enabled]
+      else
+        self.cache_enabled = false
       end
 
-      unless options[:dry_run]
-        self.dry_run = false
-      else
+      if options[:dry_run]
         self.dry_run = options[:dry_run]
-      end
-    
-      unless options[:transaction_enable]
-        self.transaction_enable = true
       else
+        self.dry_run = false
+      end
+
+      if options[:transaction_enable]
         self.transaction_enable = options[:transaction_enable].is_bool? ? options[:transaction_enable] : true
+      else
+        self.transaction_enable = true
       end
     
       unless ENV['TRANSACTION_ENABLE'].nil?

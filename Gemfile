@@ -16,7 +16,7 @@ gem 'rainbow'
 group :test do
   # Yeah, minitest is bundled in 1.9, but we want newer goodness.
   gem "minitest"
-  gem "minitest-reporters", '>= 0.5.0'
+  gem "minitest-reporters", '>= 0.8.0'
   gem "rspec"
   gem "cucumber"
   gem "rspec-rails"

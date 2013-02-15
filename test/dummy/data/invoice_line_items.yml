@@ -37,3 +37,4 @@ invoice_line_items:
     description: My Subitem3
     invoice_id: two
     parent: three
+    vehicle_id: [Ford, Taurus]
