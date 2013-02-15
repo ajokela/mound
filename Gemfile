@@ -22,8 +22,16 @@ group :test do
   gem "rspec-rails"
   gem 'simplecov'
   gem 'ci_reporter'
+end
+
+platforms :jruby do
   gem 'activerecord-jdbcsqlite3-adapter'
 end
 
-# To use debugger
-# gem 'debugger'
+platforms :mri_19 do
+  gem 'sqlite3'
+end
+
+group :development do
+  gem 'debugger'
+end
