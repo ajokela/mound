@@ -416,25 +416,50 @@ module Rabl
             raise "An Array element was detected within a compound key; | Complete Information: key => '#{key}', val => '#{val.inspect}', obj => '#{obj.inspect}', contains => #{contains}"
           end
           
-          strings = []
+          string_vals = []
+          integer_vals = []
+          keyed_vals = {}
           
           val.each{|item|
-            if item.class == String
-              strings << item
+            if item.is_a?(String)
+              # If the string can be interpreted as an integer, keep it in the integer_vals array.
+              # If not, put it in the string_vals array.
+              if item.is_i?
+                integer_vals << item.to_i
+              else
+                string_vals << item
+              end
             elsif item.class == Hash
-              
+              # If it's a hash, then it's a subkey; something like the invoice_type_id entry below.
+              #
+              # invoice_line_items:
+              # -
+              # name: kid1
+              # description: My Subitem1
+              # invoice_id:
+              #     - 'two'
+              #     - 'with child items'
+              #     - invoice_type_id: 'credit'
+              # parent: three
+              #
+              # If that's the case, go look up the subkey now.
+
+              # TODO: this really should get put into a separate keyed_vals array, to be matched
+              # against the column name given.
+
               item.each{|item_k,item_v|
                 $stderr.puts "\n\n====> item_k: #{item_k} | item_v: #{item_v}\n\n"
-                
-                strings << _resolve_ids(item_k, item_v)
-                
-                $stderr.puts "====> item_ret: #{item_ret}" if self.debug > 4
+                returned_id = _resolve_ids(item_k, item_v)
+                # TODO - this line should go away.
+                integer_vals << returned_id
+                keyed_vals[item_k] = returned_id
+                $stderr.puts "====> item_ret: #{returned_id}" if self.debug > 4
               }
               
             end
           }
           
-          vals = strings
+          vals = string_vals
           
           #elsif contains.first == String
           
@@ -447,7 +472,92 @@ module Rabl
           
           ar = obj.new
           combination_keys = ar.attributes.keys.keep_if{|column| column.match(exclude_columns).nil? }.combination(val.size).to_a
-          
+
+          potential_key_columns = ar.attributes.keys.keep_if{|column| column.match(exclude_columns).nil? }
+
+          # find the potential_key_columns that are typed as integer or as string.
+          integer_keys = potential_key_columns.find_all{|pk| obj.columns.find{|c| c.name == pk }.type == :integer}
+          string_keys = potential_key_columns.find_all{|pk| obj.columns.find{|c| c.name == pk }.type == :string}
+
+          # build up permutations of potential key matches We assume that there are more potential columns than there are values given.
+          obj_table = obj.arel_table
+
+          arel_int_clauses = []
+          arel_str_clauses = []
+
+          unless integer_keys.empty?
+            arel_int_columns = integer_keys.map {|key| obj_table[key.to_sym]}
+            arel_int_column_combos = arel_int_columns.permutation(integer_vals.size).to_a
+
+            arel_int_clauses = arel_int_column_combos.map{ |this_combo|
+              int_combo_with_keys = this_combo.zip(integer_vals)
+              # pair up each key column with a value
+              clause_elements = int_combo_with_keys.map{|field| field[0].eq(field[1])}
+              # and make a WHERE clause component.
+              clause_elements.inject{|memo, item| memo.and(item)}
+            }
+           end
+
+          unless string_keys.empty?
+            arel_string_columns = string_keys.map {|key| obj_table[key.to_sym]}
+            arel_string_column_combos = arel_string_columns.permutation(string_vals.size).to_a
+
+            arel_str_clauses = arel_string_column_combos.map{ |this_combo|
+              str_combo_with_keys = this_combo.zip(string_vals)
+              # pair up each key column with a value
+              clause_elements = str_combo_with_keys.map{|field| field[0].eq(field[1])}
+              # and make a WHERE clause component.
+              clause_elements.inject{|memo, item| memo.and(item)}
+            }
+          end
+
+          # now that we've got the subclauses built up, we need to build up a series of clauses of the form:
+          # ((str_key1 = strval1 AND str_key2 = strval2 AND intkey1 = intval1 AND intkey2=intval2) OR
+          # (str_key1 = strval1 AND str_key2 = strval2 AND intkey1 = intval2 AND intkey2=intval1) OR
+          # (str_key2 = strval1 AND str_key1 = strval2 AND intkey1 = intval1 AND intkey2=intval2) OR
+          # (str_key2 = strval1 AND str_key1 = strval2 AND intkey1 = intval2 AND intkey2=intval1))
+          # AND foreign_key_id = keyval1
+
+          arel_clauses = []
+          key_clause = nil
+          arel_clause_groups = []
+
+          unless keyed_vals.empty?
+            clause_elements = keyed_vals.map{|k,v| obj_table[k.to_sym].eq(v)}
+            key_clauses = clause_elements.inject{|memo, item| memo.and(item)}
+            key_clause = Arel::Nodes::Grouping.new(key_clauses)
+          end
+
+          if integer_keys.empty?
+            unless string_keys.empty?
+              # if we have strings but no ints, build up the final clause from the string clauses.
+              arel_clause_groups = arel_str_clauses
+            end
+          else
+            if string_keys.empty?
+              # if we have ints but no strings, build up the final clause from the int clauses.
+              arel_clause_groups = arel_int_clauses
+            else
+              # we've got both, so combine them to build up the final clause.
+              combined_clauses = arel_str_clauses.product(arel_int_clauses)
+              arel_clause_groups = combined_clauses.map{|clause| clause.inject{|memo, item| memo.and(item)}}
+            end
+          end
+
+          unless arel_clause_groups.empty?
+            # arel_clause_groups contains an array of the conjunction terms for the where clause (a bunch of AND expressions),
+            # and we want to OR them all together for the final query.
+            # in order to get them in the form
+            # (clause group 1) OR (clause group 2) OR (clause group 3...)
+            # they first need to be wrapped in Arel::Nodes::Grouping instances. Then they can be combined using OR statements.
+            grouped_clause_groups = arel_clause_groups.map{|g| Arel::Nodes::Grouping.new(g) }
+            arel_clauses = grouped_clause_groups.inject{|memo, item| memo.or(item)}
+            arel_clauses = arel_clauses.and(key_clause) unless key_clause.nil?
+
+            arel_query = obj.where(arel_clauses).to_sql
+          end
+
+
           sets = []
           
           $stderr.puts "=====> combination_keys: #{combination_keys.inspect}"

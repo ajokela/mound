@@ -15,8 +15,8 @@ class RablTest < ActiveSupport::TestCase
                   :special_columns => ['code'],
                   :delete_all => false,
                   :cache_enabled => true,
-                  :debug => 4,
-                  :search_columns => { :code => true, :mnemonic => true, :label => true, :name => true, :short_name => true, :internal_code => true, :role => true },
+                  :debug => 9,
+                  :search_columns => { :code => true, :mnemonic => true, :label => true, :name => true },
                  )
 
     ds.scoop

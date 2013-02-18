@@ -37,13 +37,13 @@ invoice_line_items:
     parent: three
     vehicle_id: [Ford, Taurus]
   # The following invoice line item will break, because the 'year' entry is an int and rabl currently only matches strings.
-  # -
-  #   name: kid4
-  #   description: My Item
-  #   invoice_id: two
-  #   vehicle_id:
-  #     - Toyota
-  #     - Corolla
-  #     - 1993
+  -
+     name: kid4
+     description: My Item
+     invoice_id: two
+     vehicle_id:
+       - Toyota
+       - Corolla
+       - 1993
 
 
