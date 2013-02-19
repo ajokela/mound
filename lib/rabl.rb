@@ -1,3 +1,3 @@
-require "rabl/engine"
-require "rabl/version"
-require "rabl/deposit"
+require 'rabl/engine'
+require 'rabl/version'
+require 'rabl/deposit'

@@ -1,34 +1,47 @@
+vehicle_types:
+  -
+    name: Sedan
+  -
+    name: Cop Cruiser
 
 vehicles:
   -
     make: Toyota
     model: Corolla
     year: 1991
+    vehicle_type_id: Sedan
   -
     make: Toyota
     model: Corolla
     year: 1992
+    vehicle_type_id: Sedan
   -
     make: Toyota
     model: Corolla
     year: 1993
+    vehicle_type_id: Sedan
   -
     make: Toyota
     model: Camry
     year: 1991
+    vehicle_type_id: Sedan
   -
     make: Toyota
     model: Camry
     year: 1992
+    vehicle_type_id: Sedan
   -
     make: Toyota
     model: Camry
     year: 1993
+    vehicle_type_id: Sedan
   -
     make: Ford
     model: Crown Victoria Police Interceptor
     year: 2008
+    vehicle_type_id: Cop Cruiser
   -
     make: Ford
     model: Taurus
     year: 1995
+    vehicle_type_id: Sedan

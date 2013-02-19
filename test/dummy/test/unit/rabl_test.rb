@@ -2,7 +2,7 @@ require 'test_helper'
 
 class RablTest < ActiveSupport::TestCase
 
-  test "Rabl Deposit Data into Database" do
+  test 'Rabl Deposit Data into Database' do
     
     file =  File.join(Rails.root.to_s, 'db', Rails.env + '.sqlite3')
     

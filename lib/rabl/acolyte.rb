@@ -62,8 +62,8 @@ module Rabl
         args[:enable] = false
       end
       
-      unless ENV["RAILS_ENV"].nil?
-        if ENV["RAILS_ENV"].match(/test/)
+      unless ENV['RAILS_ENV'].nil?
+        if ENV['RAILS_ENV'].match(/test/)
           args[:enable] = false
         end
       end

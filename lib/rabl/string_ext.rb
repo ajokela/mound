@@ -27,13 +27,13 @@ class String
   unless self.respond_to? 'pretty_truncate'
     def pretty_truncate(char_limit)
       if self.size >= char_limit
-        string = ""
+        string = ''
         words = self.split(/ /)
 
         (0...words.count).each { |i|
-          string << words[i] << " " unless (i+1) >= words.count or string.length >= char_limit
+          string << words[i] << ' ' unless (i+1) >= words.count or string.length >= char_limit
         }
-        string.chop << "..."
+        string.chop << '...'
       end
     end
   end

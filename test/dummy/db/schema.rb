@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20130214173825) do
+ActiveRecord::Schema.define(:version => 20130219191328) do
 
   create_table "invoice_line_items", :force => true do |t|
     t.string   "name"
@@ -43,12 +43,19 @@ ActiveRecord::Schema.define(:version => 20130214173825) do
 
   add_index "invoices", ["invoice_type_id"], :name => "index_invoices_on_invoice_type_id"
 
+  create_table "vehicle_types", :force => true do |t|
+    t.string   "name"
+    t.datetime "created_at", :null => false
+    t.datetime "updated_at", :null => false
+  end
+
   create_table "vehicles", :force => true do |t|
     t.string   "make"
     t.string   "model"
     t.integer  "year"
-    t.datetime "created_at", :null => false
-    t.datetime "updated_at", :null => false
+    t.integer  "vehicle_type_id"
+    t.datetime "created_at",      :null => false
+    t.datetime "updated_at",      :null => false
   end
 
 end

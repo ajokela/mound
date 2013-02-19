@@ -1,4 +1,4 @@
-source "http://rubygems.org"
+source 'http://rubygems.org'
 
 # Declare your gem's dependencies in rabl.gemspec.
 # Bundler will treat runtime dependencies like base dependencies, and
@@ -6,7 +6,7 @@ source "http://rubygems.org"
 gemspec
 
 # jquery-rails is used by the dummy application
-gem "jquery-rails"
+gem 'jquery-rails'
 gem 'rainbow'
 # Declare any dependencies that are still in development here instead of in
 # your gemspec. These might include edge Rails or gems from your path or
@@ -15,11 +15,11 @@ gem 'rainbow'
 
 group :test do
   # Yeah, minitest is bundled in 1.9, but we want newer goodness.
-  gem "minitest"
-  gem "minitest-reporters", '>= 0.8.0'
-  gem "rspec"
-  gem "cucumber"
-  gem "rspec-rails"
+  gem 'minitest'
+  gem 'minitest-reporters', '>= 0.8.0'
+  gem 'rspec'
+  gem 'cucumber'
+  gem 'rspec-rails'
   gem 'simplecov'
   gem 'ci_reporter'
 end
