@@ -4,3 +4,12 @@ invoice_types:
     name: cash
   -
     name: credit
+  -
+    name: singleton
+
+shipping_states:
+  -
+    name: normal
+  -
+    name: backordered
+

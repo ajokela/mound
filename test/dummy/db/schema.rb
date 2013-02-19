@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20130219191328) do
+ActiveRecord::Schema.define(:version => 20130219214020) do
 
   create_table "invoice_line_items", :force => true do |t|
     t.string   "name"
@@ -37,11 +37,18 @@ ActiveRecord::Schema.define(:version => 20130219191328) do
     t.string   "description"
     t.decimal  "price"
     t.integer  "invoice_type_id"
-    t.datetime "created_at",      :null => false
-    t.datetime "updated_at",      :null => false
+    t.integer  "shipping_state_id"
+    t.datetime "created_at",        :null => false
+    t.datetime "updated_at",        :null => false
   end
 
   add_index "invoices", ["invoice_type_id"], :name => "index_invoices_on_invoice_type_id"
+
+  create_table "shipping_states", :force => true do |t|
+    t.string   "name"
+    t.datetime "created_at", :null => false
+    t.datetime "updated_at", :null => false
+  end
 
   create_table "vehicle_types", :force => true do |t|
     t.string   "name"

@@ -5,6 +5,7 @@ class CreateInvoices < ActiveRecord::Migration
       t.string     :description
       t.decimal    :price
       t.references :invoice_type
+      t.references :shipping_state, :default => nil
 
       t.timestamps
     end

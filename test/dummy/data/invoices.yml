@@ -5,9 +5,15 @@ invoices:
     description: basic
     price: 9.99
     invoice_type_id: cash
-
   - 
     name: two
     description: with child items
     price: 19.99
     invoice_type_id: credit
+  -
+    name: highlander
+    description: Why is this named highlander? Beacuse there should only be one.
+    price: 0.00
+    invoice_type_id: singleton
+    shipping_state_id: backordered
+

@@ -453,6 +453,7 @@ module Rabl
 
 
       key_clause = nil
+      final_arel_clauses = nil
       arel_clause_groups = []
       ret = []
 
@@ -480,7 +481,16 @@ module Rabl
         end
       end
 
-      unless arel_clause_groups.empty?
+      # four distinct possibilities:
+      # arel clause groups could be empty or not
+      # key_clause could be empty or not
+      if arel_clause_groups.empty?
+        if key_clause.nil?
+          final_arel_clauses = nil
+        else
+          final_arel_clauses = key_clause
+        end
+      else
         # arel_clause_groups contains an array of the conjunction terms for the where clause (a bunch of AND expressions),
         # and we want to OR them all together for the final query.
         # in order to get them in the form
@@ -493,17 +503,20 @@ module Rabl
         else
           final_arel_clauses = arel_clauses.and(key_clause)
         end
+      end
 
+      unless final_arel_clauses.nil?
         arel_query = obj.where(final_arel_clauses)
         arel_query_string = arel_query.to_sql
         ret = arel_query.to_a
-
-        unless ret.size == 1
-          raise "ERROR: Attempting to locate a single #{obj.class} returned #{ret.size}, should be only 1\n\n" +
-                    "Complete Information: key => '#{key}',\n combination_keys => '#{combination_keys.inspect}',\n val => '#{val.inspect}',\n obj => '#{obj.inspect}'\n query => '#{arel_query.inspect}'\n sql => '#{arel_query_string}'\n ret => '#{ret.inspect}' ".color(:red).bright
-        end
       end
 
+      unless ret.size == 1
+        raise "ERROR: Attempting to locate a single #{obj.class} returned #{ret.size}, should be only 1\n\n" +
+              "Complete Information: key => '#{key}',\n combination_keys => '#{combination_keys.inspect}',\n val => '#{val.inspect}',\n obj => '#{obj.inspect}'\n query => '#{arel_query.inspect}'\n sql => '#{arel_query_string}'\n ret => '#{ret.inspect}' ".color(:red).bright
+      end
+
+      # hand back the result of the query.
       ret
     end
 
