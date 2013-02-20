@@ -97,34 +97,10 @@ require 'rabl/string_ext'
 #
 #    :special_columns => hash of columns that may have different types in different ActiveModels
 #                        For example, in TerraPop, one table has "code" as type integer, while another
-#                        table has "code" as a string 
+#                        table has "code" as a string
+#    :dry_run => if true, will rollback at the end. All data still is parsed and sent to the database,
+#                        but the transaction isn't committed.
 #
-
-# Developer notes
-# As of 7/17/2012, this code, when processing the following defintion:
-# agg_data_vals:
-#
-#  -
-#    sample_level_agg_data_var_id:
-#      - agg_data_var_id: TOTPOP
-#      - sample_geog_level_id: br2000a_SLAD
-#    agg_data_var_id: TOTPOP
-#    geog_instance_id: 1100924 # name: Chupinguaia
-#    value: 5514
-
-# generates the following SQL:
-# SELECT COUNT(*) FROM "agg_data_vars" WHERE (label = 'TOTPOP' OR code = 'TOTPOP')
-# SELECT "agg_data_vars".* FROM "agg_data_vars" WHERE (label = 'TOTPOP' OR code = 'TOTPOP') LIMIT 1
-# SELECT COUNT(*) FROM "sample_geog_levels" WHERE (label = 'br2000a_SLAD' OR code = 'br2000a_SLAD' OR internal_code = 'br2000a_SLAD')
-# SELECT "sample_geog_levels".* FROM "sample_geog_levels" WHERE (label = 'br2000a_SLAD' OR code = 'br2000a_SLAD' OR internal_code = 'br2000a_SLAD') LIMIT 1
-# SELECT COUNT(*) FROM "sample_level_agg_data_vars" WHERE "sample_level_agg_data_vars"."agg_data_var_id" = 1 AND "sample_level_agg_data_vars"."sample_geog_level_id" = 3
-# SELECT "sample_level_agg_data_vars".* FROM "sample_level_agg_data_vars" WHERE "sample_level_agg_data_vars"."agg_data_var_id" = 1 AND "sample_level_agg_data_vars"."sample_geog_level_id" = 3 LIMIT 1
-# SELECT COUNT(*) FROM "agg_data_vars" WHERE (label = 'TOTPOP' OR code = 'TOTPOP')
-# SELECT "agg_data_vars".* FROM "agg_data_vars" WHERE (label = 'TOTPOP' OR code = 'TOTPOP') LIMIT 1
-# SELECT COUNT(*) FROM "geog_instances" WHERE (label = '1100924' OR code = '1100924')
-# SELECT "geog_instances".* FROM "geog_instances" WHERE (label = '1100924' OR code = '1100924') LIMIT 1
-# INSERT INTO "agg_data_vals" ("agg_data_var_id", "created_at", "error", "geog_instance_id", "precision", "sample_level_agg_data_var_id", "updated_at", "value")
-# VALUES (1, '2012-07-16 10:47:41.429345', NULL, 63, NULL, 4, '2012-07-16 10:47:41.429345', 5514.0) RETURNING "id"
 
 module Rabl
 
@@ -236,6 +212,8 @@ module Rabl
 
         end
 
+
+        raise ActiveRecord::Rollback if self.dry_run
       end # commit the transaction assuming it all went in correctly.
 
     end
@@ -722,12 +700,6 @@ module Rabl
         self.dry_run = options[:dry_run]
       else
         self.dry_run = false
-      end
-
-      if options[:transaction_enable]
-        self.transaction_enable = options[:transaction_enable].is_bool? ? options[:transaction_enable] : true
-      else
-        self.transaction_enable = true
       end
 
       unless ENV['TRANSACTION_ENABLE'].nil?
