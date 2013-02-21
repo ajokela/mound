@@ -409,8 +409,9 @@ module Rabl
 
       potential_key_columns = ar.attributes.keys.keep_if { |column| column.match(exclude_columns).nil? }
 
-      # find the potential_key_columns that are typed as integer or as string.
-      integer_keys = potential_key_columns.find_all { |pk| obj.columns.find { |c| c.name == pk }.type == :integer }
+      # find the potential_key_columns that are typed as integer or as string,
+      # except for the primary key column (id) itself and other foreign keys (which should end with _id)
+      integer_keys = potential_key_columns.find_all { |pk| !(pk == 'id' or pk.end_with?('_id')) and obj.columns.find { |c| c.name == pk }.type == :integer }
       string_keys = potential_key_columns.find_all { |pk| obj.columns.find { |c| c.name == pk }.type == :string }
 
       # build up permutations of potential key matches We assume that there are more potential columns than there are values given.
@@ -449,7 +450,7 @@ module Rabl
           arel_clause_groups = arel_str_clauses
         end
       else
-        if string_keys.empty?
+        if arel_str_clauses.empty?
           # if we have ints but no strings, build up the final clause from the int clauses.
           arel_clause_groups = arel_int_clauses
         else
@@ -491,7 +492,7 @@ module Rabl
 
       unless ret.size == 1
         raise "ERROR: Attempting to locate a single #{obj.class} returned #{ret.size}, should be only 1\n\n" +
-              "Complete Information: key => '#{key}',\n combination_keys => '#{combination_keys.inspect}',\n val => '#{val.inspect}',\n obj => '#{obj.inspect}'\n query => '#{arel_query.inspect}'\n sql => '#{arel_query_string}'\n ret => '#{ret.inspect}' ".color(:red).bright
+              "Complete Information: key => '#{key}',\n combination_keys => '#{combination_keys.inspect}',\n val => '#{val.inspect}',\n obj => '#{obj.inspect}'\n sql => '#{arel_query_string}'\n ret => '#{ret.inspect}' ".color(:red).bright
       end
 
       # hand back the result of the query.
