@@ -257,7 +257,7 @@ module Rabl
             k_sym = k.sub(/_id$/, '').intern
             # check to make sure that there's actually an AR association in place before trying to resolve it.
 
-            $stderr.puts __LINE__.to_s + " #{v.inspect} | #{v.class}"
+            $stderr.puts __LINE__.to_s + " #{v.inspect} | #{v.class}" if self.debug > 2
 
             foreign_table_assoc = record_obj.class.reflect_on_association(k_sym)
 
@@ -395,7 +395,7 @@ module Rabl
           # If that's the case, go look up the subkey now.
 
           item.each { |item_k, item_v|
-            $stderr.puts "\n\n====> item_k: #{item_k} | item_v: #{item_v}\n\n"
+            $stderr.puts "\n\n====> item_k: #{item_k} | item_v: #{item_v}\n\n" if self.debug > 4
             returned_id = _resolve_ids(item_k, item_v)
             keyed_vals[item_k] = returned_id
             $stderr.puts "====> item_ret: #{returned_id}" if self.debug > 4
@@ -405,12 +405,13 @@ module Rabl
       }
 
       ar = obj.new
-      combination_keys = ar.attributes.keys.keep_if { |column| column.match(exclude_columns).nil? }.combination(val.size).to_a
 
       potential_key_columns = ar.attributes.keys.keep_if { |column| column.match(exclude_columns).nil? }
 
       # find the potential_key_columns that are typed as integer or as string,
-      # except for the primary key column (id) itself and other foreign keys (which should end with _id)
+      # except for the primary key column (id) itself and other integer foreign keys (which should end with _id)
+      # Note that we can't preclude all columns that end in _id, because we want to keep columns like
+      # sample_id on terrapop_samples, which is a varchar.
       integer_keys = potential_key_columns.find_all { |pk| !(pk == 'id' or pk.end_with?('_id')) and obj.columns.find { |c| c.name == pk }.type == :integer }
       string_keys = potential_key_columns.find_all { |pk| obj.columns.find { |c| c.name == pk }.type == :string }
 
@@ -492,7 +493,7 @@ module Rabl
 
       unless ret.size == 1
         raise "ERROR: Attempting to locate a single #{obj.class} returned #{ret.size}, should be only 1\n\n" +
-              "Complete Information: key => '#{key}',\n combination_keys => '#{combination_keys.inspect}',\n val => '#{val.inspect}',\n obj => '#{obj.inspect}'\n sql => '#{arel_query_string}'\n ret => '#{ret.inspect}' ".color(:red).bright
+              "Complete Information: key => '#{key}',\n string_keys => '#{string_keys.inspect}',\n integer_keys => '#{integer_keys.inspect}',\n val => '#{val.inspect}',\n obj => '#{obj.inspect}'\n sql => '#{arel_query_string}'\n ret => '#{ret.inspect}' ".color(:red).bright
       end
 
       # hand back the result of the query.
