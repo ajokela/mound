@@ -1,3 +1,0 @@
-= Rabl
-
-Rabl provides a means for bulk-loading structured relational data into your database, while properly dealing with foreign keys.
