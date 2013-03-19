@@ -13,10 +13,10 @@ Gem::Specification.new do |s|
   s.summary     = "Ruby Abstract Bulk Loader"
   s.description = "Metaprogramming sugar for human-readable data relation building and ingesting"
 
-  s.files = Dir["{app,config,db,lib}/**/*"] + ["LICENSE", "Rakefile", "README.rdoc"]
+  s.files = Dir["{app,config,db,lib}/**/*"] + ["LICENSE", "Rakefile", "README.md"]
   s.test_files = Dir["test/**/*"]
 
-  s.add_dependency "rails", ">= 3.2.12"
+  s.add_dependency "rails", ">= 3.2.13"
   
 #  s.add_development_dependency "activerecord-jdbcsqlite3-adapter"
 end
