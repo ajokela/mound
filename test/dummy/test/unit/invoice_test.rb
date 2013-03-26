@@ -1,3 +1,4 @@
+# encoding: utf-8
 require 'test_helper'
 
 class InvoiceTest < ActiveSupport::TestCase
@@ -14,5 +15,5 @@ class InvoiceTest < ActiveSupport::TestCase
   #
   #  assert_equal 2, items.size, "Wrong number of line items"
   #end
-
+    
 end

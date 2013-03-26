@@ -45,3 +45,10 @@ vehicles:
     model: Taurus
     year: 1995
     vehicle_type_id: Sedan
+    
+  -
+    make: Gosh Beans
+    model: Híjole Fríjoles
+    year: 1972
+    vehicle_type_id: Sedan
+

@@ -6,7 +6,6 @@ source 'http://rubygems.org'
 gemspec
 
 # jquery-rails is used by the dummy application
-gem 'jquery-rails'
 gem 'rainbow'
 # Declare any dependencies that are still in development here instead of in
 # your gemspec. These might include edge Rails or gems from your path or
@@ -18,10 +17,7 @@ group :test do
   gem 'minitest'
   gem 'minitest-reporters', '>= 0.8.0'
   gem 'rspec'
-  gem 'cucumber'
   gem 'rspec-rails'
-  gem 'simplecov'
-  gem 'ci_reporter'
 end
 
 platforms :jruby do
@@ -33,5 +29,7 @@ platforms :mri_19 do
 end
 
 group :development do
-  gem 'debugger'
+  platforms :mri_19 do
+    gem 'debugger'
+  end
 end

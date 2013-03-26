@@ -1,3 +1,4 @@
+# encoding: utf-8
 #######################################################################################################################
 #                                              ####     #    ####   #     
 #                                              #   #   # #   #   #  #     
@@ -125,8 +126,10 @@ module Rabl
       preloaded_data = {}
 
       Rabl::Utilities.wait_spinner {
-        self.data = YAML.load_file(self.options[:file])
+        self.data = File.open(self.options[:file], 'r:UTF-8'){|f| YAML.load_stream(f) }.first
       }
+
+      $stderr.puts self.data.inspect
 
       path = File.dirname(File.expand_path(self.options[:file]))
 
@@ -136,7 +139,10 @@ module Rabl
             if self.data[key].class == Hash
               if self.data[key]['include_before'].class == Array
                 self.data[key]['include_before'].each do |file|
-                  preloaded_data.merge!(YAML.load_file(File.join(path, file)))
+                  
+                  yaml = File.open(File.join(path, file), 'r:UTF-8') {|f| YAML.load_stream(f)}.first
+                  
+                  preloaded_data.merge!(yaml)
                 end
               end
             end

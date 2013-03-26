@@ -1,3 +1,4 @@
+# encoding: utf-8
 require 'test_helper'
 
 class RablTest < ActiveSupport::TestCase
@@ -20,6 +21,10 @@ class RablTest < ActiveSupport::TestCase
                  )
 
     ds.scoop
+    
+    vehicles = Vehicle.where({:model => 'Híjole Fríjoles'})
+
+    assert_equal 1, vehicles.size, "Did not find a vehicle with a model with diacriticals"
     
   end
   
