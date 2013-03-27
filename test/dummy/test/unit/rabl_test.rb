@@ -25,4 +25,5 @@ class RablTest < ActiveSupport::TestCase
     assert_equal 1, vehicles.size, "Did not find a vehicle with a model with diacriticals"
     
   end
+  
 end
