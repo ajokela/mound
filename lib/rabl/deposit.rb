@@ -11,7 +11,7 @@
 #
 #######################################################################################################################
 #
-# Copyright (c) 2012, REGENTS OF THE UNIVERSITY OF MINNESOTA
+# Copyright (c) 2012, 2013, REGENTS OF THE UNIVERSITY OF MINNESOTA
 # All rights reserved.
 # Redistribution and use in source and binary forms, with or without modification, are permitted
 # provided that the following conditions are met:
@@ -157,7 +157,11 @@ module Rabl
             if self.data[key].class == Hash
               if self.data[key]['include_after'].class == Array
                 self.data[key]['include_after'].each do |file|
-                  self.data.merge!(YAML.load_file(File.join(path, file)))
+                  #self.data.merge!(YAML.load_file(File.join(path, file)))
+                  
+                  yaml = File.open(File.join(path, file), 'r:UTF-8') {|f| YAML.load_stream(f)}.first
+                  self.data.merge!(yaml)
+                  
                 end
               end
             end
@@ -187,7 +191,7 @@ module Rabl
 
       Rabl::Database::Transaction.block(self.transaction_enable) do
 
-        $stderr.puts ''
+        $stderr.puts '' if self.debug > 1
 
         data.each do |key, dat|
 
@@ -196,21 +200,22 @@ module Rabl
             obj = nil
 
             begin
+              
               name = key.singularize.camelize
-              $stderr.print "     + Working on #{name}".widthize(48) + "(#{dat.count} objects)  ".color(:yellow)
+              $stderr.print "     + Working on #{name}".widthize(48) + "(#{dat.count} objects)  ".color(:yellow) if self.debug > 1
 
               # Get the class object for the class named 'name'.
               obj = name.constantize
-                # obj.delete_all if options[:delete_all]
+
             rescue Exception => e
-              $stderr.puts "#{e}"
+              $stderr.puts "#{e}" if self.debug > 1
             end
 
             Rabl::Utilities.wait_spinner(self.debug) {
               _load_data(dat, obj)
             }
 
-            $stderr.puts ''
+            $stderr.puts '' if self.debug > 1
 
           end
 
