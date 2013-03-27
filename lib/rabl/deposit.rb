@@ -129,8 +129,6 @@ module Rabl
         self.data = File.open(self.options[:file], 'r:UTF-8'){|f| YAML.load_stream(f) }.first
       }
 
-      # $stderr.puts self.data.inspect
-
       path = File.dirname(File.expand_path(self.options[:file]))
 
       SPECIAL_KEYS.each do |key, val|
