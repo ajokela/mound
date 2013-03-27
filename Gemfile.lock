@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    rabl (0.0.9)
+    rabl (0.1.0)
       rails (>= 3.2.13)
 
 GEM
@@ -128,6 +128,7 @@ DEPENDENCIES
   minitest-reporters (>= 0.8.0)
   rabl!
   rainbow
+  rake
   rspec
   rspec-rails
   sqlite3

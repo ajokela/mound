@@ -18,6 +18,7 @@ group :test do
   gem 'minitest-reporters', '>= 0.8.0'
   gem 'rspec'
   gem 'rspec-rails'
+  gem 'rake'
 end
 
 platforms :jruby do
