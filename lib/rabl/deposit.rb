@@ -89,12 +89,13 @@ require 'rabl/string_ext'
 #
 #                                    It takes the form:
 #
-#                                    lambda { |k, column_type, special_column, val|  }
+#                                    lambda { |k, column_type, special_column, val, ar|  }
 # 
 #                                    k              = a single key obtained from a keys.keep_if {|k| lambda_gets_called_here }
 #                                    column_type    = ActiveRecord->columns[:single_column]->type
 #                                    special_column = one of the columns listed in option hash ":special_columns"
 #                                    val            = individual value from an item/entry in the data file
+#                                    obj            = an active record model object
 #
 #    :special_columns => hash of columns that may have different types in different ActiveModels
 #                        For example, in TerraPop, one table has "code" as type integer, while another
@@ -511,7 +512,7 @@ module Rabl
 
     def _resolve_ids(key, val, bool_oper = 'OR', obj = nil)
       # We're looking for an object of type 'key' that has primary keys of 'val'. Val may be a hash, or it may be a value.
-      $stderr.puts "TRACE: digging for Key: #{key.to_s}, Val: #{val.to_s}" if self.debug > 4
+      $stderr.puts __LINE__.to_s + " TRACE: digging for Key: #{key.to_s}, Val: #{val.to_s}" if self.debug > 4
 
       unless VALID_OPERS.include? bool_oper.downcase.to_sym
         bool_oper = 'OR'
@@ -554,7 +555,7 @@ module Rabl
 
           end
 
-          $stderr.puts "TRACE: Complete Information: key => '#{key}', val => '#{val.inspect}', obj => '#{obj.inspect}'" if self.debug > 4
+          $stderr.puts __LINE__.to_s + " TRACE: Complete Information: key => '#{key}', val => '#{val.inspect}', obj => '#{obj.inspect}'" if self.debug > 4
 
           return _resolve_ids(key, vals, 'AND') # vals
 
@@ -580,12 +581,17 @@ module Rabl
 
           ar = obj.new
           keys = ar.attributes.keys.keep_if { |k| search_columns.include? k.to_sym }
+          
+          $stderr.puts  __LINE__.to_s + " TRACE: Active Record Model Inspection => #{ar.inspect}" if self.debug > 4
 
           if special_search_column_logic.class == Proc
             special_columns.each do |c|
               if ar.attributes.include? c
 
-                keys = keys.keep_if { |k| special_search_column_logic.call(k, ar.column_for_attribute(c).type, c, val) }
+                keys = keys.keep_if { |k| 
+                  $stderr.puts  __LINE__.to_s + " TRACE: #{ar.class}" if self.debug > 4
+                  special_search_column_logic.call(k, ar.column_for_attribute(c).type, c, val, ar) 
+                }
 
               end
             end
@@ -596,7 +602,7 @@ module Rabl
 
           vals = ([val.to_s] * keys.size)
 
-          $stderr.puts 'TRACE: ' + __LINE__.to_s + ' ' + obj.where([where_str, *vals]).to_sql if self.debug > 4
+          $stderr.puts __LINE__.to_s + " TRACE: " + obj.where([where_str, *vals]).to_sql + "\n\n" if self.debug > 4
 
           val_obj = obj.where([where_str, *vals])
 
@@ -671,7 +677,7 @@ module Rabl
         self.special_search_column_logic = options[:special_search_column_logic]
       else
 
-        self.special_search_column_logic = lambda { |k, column_type, special_column, val|
+        self.special_search_column_logic = lambda { |k, column_type, special_column, val, obj|
           if k.casecmp(special_column) == 0 and column_type != :string and val.to_s.is_i?
             true
           elsif k.casecmp(special_column) == 0 and column_type == :string
