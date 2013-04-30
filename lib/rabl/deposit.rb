@@ -116,7 +116,7 @@ module Rabl
     SPECIAL_KEYS = {'_config' => true, 'post_build' => true}
 
     def initialize(*options)
-      @@mutex = Mutex.new
+      @@mutex = Mutex.new unless defined? @@mutex
       
       self.options = _config(options)
 
