@@ -109,13 +109,6 @@ module Rabl
 
   class Deposit
 
-    # shoveling data and datar-tots into TerraPop
-
-    # these are needed to make Devise-based "User" work correctly
-
-    #include Rails.application.routes.url_helpers
-    #include Rails.application.routes.mounted_helpers
-
     attr_accessor :data, :objects, :exclude_columns, :search_columns, :special_search_column_logic, :special_columns
     attr_accessor :issues, :options, :debug, :dry_run, :cache_enabled, :transaction_enable
 
