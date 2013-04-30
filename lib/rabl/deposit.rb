@@ -1,10 +1,10 @@
 # encoding: utf-8
 #######################################################################################################################
-#                                              ####     #    ####   #     
-#                                              #   #   # #   #   #  #     
-#                                              ####   #   #  ####   #     
-#                                              # #    #####  #   #  #     
-#                                              #  ##  #   #  ####   ##### 
+#                                              ####     #    ####   #
+#                                              #   #   # #   #   #  #
+#                                              ####   #   #  ####   #
+#                                              # #    #####  #   #  #
+#                                              #  ##  #   #  ####   #####
 #######################################################################################################################
 #
 #   Ruby Abstract Bulk Loader
@@ -43,7 +43,7 @@ require 'rabl/string_ext'
 
 #########
 #
-#  Rabl 
+#  Rabl
 #
 #  A "Rabl" object requires a hash of options passed the call to "new"
 #
@@ -230,6 +230,15 @@ module Rabl
 
     private
 
+    # our own private constantize
+    def _constantize(class_name)
+      unless /\A(?:::)?([A-Z]\w*(?:::[A-Z]\w*)*)\z/ =~ class_name
+        raise NameError, "#{class_name.inspect} is not a valid constant name!"
+      end
+
+      Object.module_eval("::#{$1}", __FILE__, __LINE__)
+    end
+
     # load all the records for one entity type.
     # if requires_extra_work is false, they can be inserted directly.
     # If it's true, then call _load_single_instance which can look up the appropriate foreign keys and do the insert.
@@ -353,7 +362,6 @@ module Rabl
       # after processing all the elements for this object in the yaml file, save the object.
       record_obj.save if record_obj.changed?
     end
-
 
     # build_clause_elements is a helper method used by resolve_ids.
     # Given an array of query_keys and an array of query_values, it generates the cross-product of the two arrays
@@ -521,7 +529,7 @@ module Rabl
       # if we weren't explicitly given a class object to instantiate, get the class now.
       if obj.nil?
         class_name = key.sub(/_id$/, '').singularize.camelize
-        obj = class_name.constantize
+        obj = _constantize(class_name)
       end
 
       ######
@@ -635,7 +643,6 @@ module Rabl
       end
 
     end
-
 
     def _config(options)
 
