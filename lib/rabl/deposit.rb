@@ -37,6 +37,7 @@
 # 
 #######################################################################################################################
 
+require 'thread'
 require 'rainbow'
 require 'rabl/acolyte'
 require 'rabl/string_ext'
@@ -122,6 +123,8 @@ module Rabl
     SPECIAL_KEYS = {'_config' => true, 'post_build' => true}
 
     def initialize(*options)
+      @@mutex = Mutex.new
+      
       self.options = _config(options)
 
       preloaded_data = {}
@@ -206,7 +209,7 @@ module Rabl
               $stderr.print "     + Working on #{name}".widthize(48) + "(#{dat.count} objects)  ".color(:yellow) if self.debug > 1
 
               # Get the class object for the class named 'name'.
-              obj = name.constantize
+              obj = _constantize(name)
 
             rescue Exception => e
               $stderr.puts "#{e}" if self.debug > 1
@@ -222,7 +225,6 @@ module Rabl
 
         end
 
-
         raise ActiveRecord::Rollback if self.dry_run
       end # commit the transaction assuming it all went in correctly.
 
@@ -235,8 +237,11 @@ module Rabl
       unless /\A(?:::)?([A-Z]\w*(?:::[A-Z]\w*)*)\z/ =~ class_name
         raise NameError, "#{class_name.inspect} is not a valid constant name!"
       end
-
-      Object.module_eval("::#{$1}", __FILE__, __LINE__)
+      
+      @@mutex.synchronize do
+        Object.module_eval("::#{$1}", __FILE__, __LINE__)
+      end
+      
     end
 
     # load all the records for one entity type.
