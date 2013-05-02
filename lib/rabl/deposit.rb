@@ -492,6 +492,7 @@ module Rabl
         # in order to get them in the form
         # (clause group 1) OR (clause group 2) OR (clause group 3...)
         # they first need to be wrapped in Arel::Nodes::Grouping instances. Then they can be combined using OR statements.
+        
         grouped_clause_groups = arel_clause_groups.map { |g| Arel::Nodes::Grouping.new(g) }
         arel_clauses = grouped_clause_groups.inject { |memo, item| memo.or(item) }
         if key_clause.nil?
@@ -542,12 +543,6 @@ module Rabl
         val.each { |item|
           contains << item.class
         }
-
-        #contains.uniq!
-
-        #if contains.length > 1
-        #  raise "Attempting to resolve compound keys, but the array of values was of mixed types (e.g. Hash and Strings, etc) | Complete Information: key => '#{key}', val => '#{val.inspect}', obj => '#{obj.inspect}', contains => #{contains}"
-        # end
 
         vals = {}
 
@@ -602,17 +597,24 @@ module Rabl
               end
             end
           end
+          
+          #vals = ([val.to_s] * keys.size)
+          
+          ###########
+          # Arel Related Testing
+          
+          arel_relation = keys.map{|key| 
+            obj.arel_table[key.to_sym].eq(val)
+          }.inject{|result,item| result.or(item) }
+          
+          ###########
 
           # construct a WHERE clause to deal with looking up the foreign key requested in the call
-          where_str = keys.join(" = ? #{bool_oper} ") + ' = ?'
+          #where_str = keys.join(" = ? #{bool_oper} ") + ' = ?'
 
-          vals = ([val.to_s] * keys.size)
-
-          $stderr.puts __LINE__.to_s + " TRACE: " + obj.where([where_str, *vals]).to_sql + "\n\n" if self.debug > 4
-
-          val_obj = obj.where([where_str, *vals])
-
-          # raise obj.where([where_str, *vals]).to_sql
+          val_obj = obj.where(arel_relation)
+          
+          $stderr.puts __LINE__.to_s + " TRACE: " + obj.where(arel_relation).to_sql + "\n\n" if self.debug > 4
 
         end
 
