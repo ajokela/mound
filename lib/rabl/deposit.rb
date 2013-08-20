@@ -353,6 +353,8 @@ module Rabl
 
         unless do_not_send
           record_obj.send(key + '=', resolved_val)
+        else
+          $stderr.puts(__LINE__.to_s + ' ' + "TRACE: do_not_send is true - not setting #{key} to '#{resolved_val}'") if self.debug > 3
         end
 
       end
