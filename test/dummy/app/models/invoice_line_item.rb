@@ -4,6 +4,6 @@ class InvoiceLineItem < ActiveRecord::Base
   has_many :children, :class_name => 'InvoiceLineItem', :foreign_key => 'parent_id'
   belongs_to :vehicle
 
-  attr_accessible :description
+  # attr_accessible :description
 
 end
