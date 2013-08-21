@@ -365,7 +365,7 @@ module Rabl
       if self.debug > 3
         $stderr.puts(__LINE__.to_s + ' ' + "TRACE: record_obj.changed? is #{record_obj.changed?}")
         
-        $stderr.puts(__LINE__.to_s + ' ' + "#{record_obj.class.to_s} inspection: \n\n#{record_obj.inspect}"
+        $stderr.puts(__LINE__.to_s + ' ' + "#{record_obj.class.to_s} inspection: \n\n#{record_obj.inspect}")
         
       end
       
