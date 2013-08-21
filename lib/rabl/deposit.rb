@@ -183,8 +183,9 @@ module Rabl
       extend Rails.application.routes.url_helpers
       extend Rails.application.routes.mounted_helpers
 
+      $stderr.puts "Database Configuration Information:\n\n#{ActiveRecord::Base.connection_config.inspect}\n\n" if self.debug > 1
 
-      ActiveRecord::Base.connection.enable_query_cache!
+      ActiveRecord::Base.connection.enable_query_cache! if self.cache_enabled
 
       Rabl::Database::Transaction.block(self.transaction_enable) do
 
