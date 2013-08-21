@@ -364,7 +364,7 @@ module Rabl
       
       $stderr.puts(__LINE__.to_s + ' ' + "TRACE: record_obj.changed? is #{record_obj.changed?}") if self.debug > 3
       
-      record_obj.save if record_obj.changed?
+      record_obj.save! if record_obj.changed?
     end
 
     # build_clause_elements is a helper method used by resolve_ids.
