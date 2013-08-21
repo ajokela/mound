@@ -362,7 +362,12 @@ module Rabl
 
       # after processing all the elements for this object in the yaml file, save the object.
       
-      $stderr.puts(__LINE__.to_s + ' ' + "TRACE: record_obj.changed? is #{record_obj.changed?}") if self.debug > 3
+      if self.debug > 3
+        $stderr.puts(__LINE__.to_s + ' ' + "TRACE: record_obj.changed? is #{record_obj.changed?}")
+        
+        $stderr.puts(__LINE__.to_s + ' ' + "#{record_obj.class.to_s} inspection: \n\n#{record_obj.inspect}"
+        
+      end
       
       record_obj.save! if record_obj.changed?
     end
