@@ -3,7 +3,7 @@ require File.expand_path('../boot', __FILE__)
 require 'rails/all'
 
 Bundler.require
-require 'rabl'
+require 'mound'
 
 module Dummy
   class Application < Rails::Application

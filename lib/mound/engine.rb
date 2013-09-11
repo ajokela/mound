@@ -1,5 +1,5 @@
-module Rabl
+module Mound
   class Engine < ::Rails::Engine
-    isolate_namespace Rabl
+    isolate_namespace Mound
   end
 end

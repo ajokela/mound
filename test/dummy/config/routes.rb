@@ -1,4 +1,4 @@
 Rails.application.routes.draw do
 
-  mount Rabl::Engine => '/rabl'
+  mount Mound::Engine => '/rabl'
 end

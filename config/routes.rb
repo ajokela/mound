@@ -1,2 +1,2 @@
-Rabl::Engine.routes.draw do
+Mound::Engine.routes.draw do
 end

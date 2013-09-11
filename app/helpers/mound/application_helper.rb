@@ -1,4 +1,4 @@
-module Rabl
+module Mound
   module ApplicationHelper
   end
 end
