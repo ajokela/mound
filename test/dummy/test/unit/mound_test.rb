@@ -5,7 +5,7 @@ class RablTest < ActiveSupport::TestCase
 
   def setup
     
-    ds = Rabl::Deposit.new(:file => File.join(Rails.root.to_s, 'data', 'potpourri.yml'),
+    ds = Mound::Deposit.new(:file => File.join(Rails.root.to_s, 'data', 'potpourri.yml'),
     
                   :special_columns => ['code'],
                   :delete_all => false,

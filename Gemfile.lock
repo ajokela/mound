@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    rabl (0.1.6)
+    mound (0.1.9)
       rails (~> 4.0)
 
 GEM
@@ -120,7 +120,7 @@ DEPENDENCIES
   debugger
   minitest
   minitest-reporters (>= 0.8.0)
-  rabl!
+  mound!
   rainbow
   rake
   rspec

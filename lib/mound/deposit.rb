@@ -39,16 +39,16 @@
 
 require 'thread'
 require 'rainbow'
-require 'rabl/acolyte'
-require 'rabl/string_ext'
+require 'mound/acolyte'
+require 'mound/string_ext'
 
 #########
 #
-#  Rabl
+#  Mound
 #
-#  A "Rabl" object requires a hash of options passed the call to "new"
+#  A "Mound" object requires a hash of options passed the call to "new"
 #
-#    :file => "relative path to the data file in a Rabl-DSL-YAML-format"
+#    :file => "relative path to the data file in a Mound-DSL-YAML-format"
 #    :delete_all => true/false to delete all existing records before loading
 #    :search_columns => a hash of symbols specifying valid column names to search for matching record columns
 #
@@ -105,7 +105,7 @@ require 'rabl/string_ext'
 #                        but the transaction isn't committed.
 #
 
-module Rabl
+module Mound
 
   class Deposit
 
@@ -122,7 +122,7 @@ module Rabl
 
       preloaded_data = {}
 
-      Rabl::Utilities.wait_spinner {
+      Mound::Utilities.wait_spinner {
         self.data = File.open(self.options[:file], 'r:UTF-8'){|f| YAML.load_stream(f) }.first
       }
 
@@ -187,7 +187,7 @@ module Rabl
 
       ActiveRecord::Base.connection.enable_query_cache! if self.cache_enabled
 
-      Rabl::Database::Transaction.block(self.transaction_enable) do
+      Mound::Database::Transaction.block(self.transaction_enable) do
 
         $stderr.puts '' if self.debug > 1
 
@@ -209,7 +209,7 @@ module Rabl
               $stderr.puts "#{e}" if self.debug > 1
             end
 
-            Rabl::Utilities.wait_spinner(self.debug) {
+            Mound::Utilities.wait_spinner(self.debug) {
               _load_data(dat, obj)
             }
 
