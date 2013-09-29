@@ -34,13 +34,14 @@
 # TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# 
+#
 #######################################################################################################################
 
 require 'thread'
 require 'rainbow'
 require 'mound/acolyte'
 require 'mound/string_ext'
+require 'mound/lumber_jack'
 
 #########
 #
@@ -275,7 +276,7 @@ module Mound
             k_sym = k.sub(/_id$/, '').intern
             # check to make sure that there's actually an AR association in place before trying to resolve it.
 
-            $stderr.puts __LINE__.to_s + " #{v.inspect} | #{v.class}" if self.debug > 2
+            $stderr.puts __LINE__.to_s + " k_sym => #{k_sym.to_s} - #{v.inspect} | #{v.class}" if self.debug > 2
 
             foreign_table_assoc = record_obj.class.reflect_on_association(k_sym)
 
@@ -287,6 +288,7 @@ module Mound
             end
 
             if foreign_table.nil?
+              $stderr.puts(__LINE__.to_s + ' ' + "TRACE: foreign_table is nil") if self.debug > 4
               resolved_val = _resolve_ids(key, v)
             else
               $stderr.puts(__LINE__.to_s + ' ' + "TRACE: #{key} points to foreign key #{foreign_table}") if self.debug > 2
@@ -390,6 +392,13 @@ module Mound
     end
 
     def resolve_compound_keys(key, obj, val)
+      
+      $stderr.puts(__LINE__.to_s + ' ' + "TRACE: resolve_compound_keys -------- \n\n\n\n") if self.debug > 4
+
+      $stderr.puts(__LINE__.to_s + ' ' + "key: #{key.to_s}") if self.debug > 4
+      $stderr.puts(__LINE__.to_s + ' ' + "obj: #{obj.to_s}") if self.debug > 4
+      $stderr.puts(__LINE__.to_s + ' ' + "val: #{val.to_s}") if self.debug > 4
+      
       string_vals = []
       integer_vals = []
       keyed_vals = {}
@@ -427,6 +436,9 @@ module Mound
         end
       }
 
+      $stderr.puts(__LINE__.to_s + " TRACE: string_vals: #{string_vals.to_s}") if self.debug > 4
+      $stderr.puts(__LINE__.to_s + " TRACE: integer_vals: #{integer_vals.to_s}") if self.debug > 4
+
       ar = obj.new
 
       potential_key_columns = ar.attributes.keys.keep_if { |column| column.match(exclude_columns).nil? }
@@ -454,11 +466,14 @@ module Mound
       # (str_key2 = strval1 AND str_key1 = strval2 AND intkey1 = intval2 AND intkey2=intval1))
       # AND foreign_key_id = keyval1
 
+      $stderr.puts __LINE__.to_s + " TRACE: arel_str_clauses: #{arel_str_clauses.inspect}" if self.debug > 10
 
       key_clause = nil
       final_arel_clauses = nil
       arel_clause_groups = []
       ret = []
+
+      $stderr.puts __LINE__.to_s + " TRACE: keyed_vals: #{keyed_vals.inspect}" if self.debug > 5
 
       unless keyed_vals.empty?
         clause_elements = keyed_vals.map { |k, v| obj_table[k.to_sym].eq(v) }
@@ -484,10 +499,18 @@ module Mound
         end
       end
 
+      $stderr.puts __LINE__.to_s + " TRACE: arel_clause_groups: #{arel_clause_groups.inspect}" if self.debug > 10
+
+      
+
       # four distinct possibilities:
       # arel clause groups could be empty or not
       # key_clause could be empty or not
+      
       if arel_clause_groups.empty?
+        
+        $stderr.puts __LINE__.to_s + " TRACE: arel_clause_groups is empty" if self.debug > 5
+        
         if key_clause.nil?
           final_arel_clauses = nil
         else
@@ -500,14 +523,22 @@ module Mound
         # (clause group 1) OR (clause group 2) OR (clause group 3...)
         # they first need to be wrapped in Arel::Nodes::Grouping instances. Then they can be combined using OR statements.
         
+        $stderr.puts __LINE__.to_s + " TRACE: arel_clause_groups is NOT empty" if self.debug > 5
+        
         grouped_clause_groups = arel_clause_groups.map { |g| Arel::Nodes::Grouping.new(g) }
+        
+        $stderr.puts __LINE__.to_s + " TRACE: generated grouped_clause_groups.size: #{grouped_clause_groups.size}" if self.debug > 5
+        
         arel_clauses = grouped_clause_groups.inject { |memo, item| memo.or(item) }
+        
         if key_clause.nil?
           final_arel_clauses = arel_clauses
         else
           final_arel_clauses = arel_clauses.and(key_clause)
         end
       end
+      
+      # $stderr.puts __LINE__.to_s + " TRACE: final_arel_clauses: #{final_arel_clauses.inspect}" if self.debug > 5
 
       unless final_arel_clauses.nil?
         arel_query = obj.where(final_arel_clauses)
@@ -534,6 +565,7 @@ module Mound
 
       # if we weren't explicitly given a class object to instantiate, get the class now.
       if obj.nil?
+        $stderr.puts __LINE__.to_s + " TRACE: obj passed into _resolve_ids is nil" if self.debug > 4
         class_name = key.sub(/_id$/, '').singularize.camelize
         obj = _constantize(class_name)
       end
@@ -544,6 +576,8 @@ module Mound
       #
 
       if val.class == Array
+        
+        $stderr.puts __LINE__.to_s + " TRACE: val is class 'Array'" if self.debug > 4
 
         contains = []
 
@@ -569,6 +603,8 @@ module Mound
 
         else
 
+          $stderr.puts __LINE__.to_s + " TRACE: Resolving Compound Keys for [key: #{key.to_s}] => #{obj.to_s} - [#{val.to_s}]" if self.debug > 4
+          
           if contains.include? Array
             raise "An Array element was detected within a compound key; | Complete Information: key => '#{key}', val => '#{val.inspect}', obj => '#{obj.inspect}', contains => #{contains}"
           end
@@ -581,6 +617,8 @@ module Mound
 
       else
 
+        $stderr.puts __LINE__.to_s + " TRACE: val is not class 'Array'" if self.debug > 4
+        
         if bool_oper.casecmp('and') == 0 and val.class == Hash
 
           val_obj = obj.where(val)
