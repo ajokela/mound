@@ -130,15 +130,17 @@ module Mound
       path = File.dirname(File.expand_path(self.options[:file]))
 
       SPECIAL_KEYS.each do |key, val|
-        if self.data.include? key
-          if key == '_config'
-            if self.data[key].class == Hash
-              if self.data[key]['include_before'].class == Array
-                self.data[key]['include_before'].each do |file|
+        unless if self.data.nil?
+          if self.data.include? key
+            if key == '_config'
+              if self.data[key].class == Hash
+                if self.data[key]['include_before'].class == Array
+                  self.data[key]['include_before'].each do |file|
                   
-                  yaml = File.open(File.join(path, file), 'r:UTF-8') {|f| YAML.load_stream(f)}.first
+                    yaml = File.open(File.join(path, file), 'r:UTF-8') {|f| YAML.load_stream(f)}.first
                   
-                  preloaded_data.merge!(yaml)
+                    preloaded_data.merge!(yaml)
+                  end
                 end
               end
             end
