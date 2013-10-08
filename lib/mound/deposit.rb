@@ -148,7 +148,7 @@ module Mound
         end
       end
 
-      preloaded_data.merge!(self.data)
+      preloaded_data.merge!(self.data) unless self.data.nil?
       self.data = preloaded_data
 
       SPECIAL_KEYS.each do |key, val|
