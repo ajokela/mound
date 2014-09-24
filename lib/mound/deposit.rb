@@ -70,12 +70,12 @@ require 'mound/lumber_jack'
 #                       id  |    meat   | created_at | updated_at
 #                     ------+-----------+------------+------------
 #                        1  |  mystery  |  *time*    |  *time*
-#                    
+#
 #
 #                      Assume that meat_types was loaded in first with a structure like:
 #
 #                      meat_types:
-#                        - 
+#                        -
 #                          meat: mystery
 #
 #                      Then later in the data file, you have a hotdog object specified like this:
@@ -92,7 +92,7 @@ require 'mound/lumber_jack'
 #                                    It takes the form:
 #
 #                                    lambda { |k, column_type, special_column, val, ar|  }
-# 
+#
 #                                    k              = a single key obtained from a keys.keep_if {|k| lambda_gets_called_here }
 #                                    column_type    = ActiveRecord->columns[:single_column]->type
 #                                    special_column = one of the columns listed in option hash ":special_columns"
@@ -112,6 +112,7 @@ module Mound
 
     attr_accessor :data, :objects, :exclude_columns, :search_columns, :special_search_column_logic, :special_columns
     attr_accessor :issues, :options, :debug, :dry_run, :cache_enabled, :transaction_enable
+    attr_accessor :parent_columns
 
     VALID_OPERS = {:or => true, :and => true}
     SPECIAL_KEYS = {'_config' => true, 'post_build' => true}
@@ -320,7 +321,7 @@ module Mound
           # and the method to set the collection using explicit primary ids is agg_data_var_group_ids
           resolved_val = subkeys
 
-        elsif key.match /^parent$/ or key.match /area_reference_variable$/
+        elsif self.parent_columns.reject{|pc| key.match pc}.count != self.parent_columns.count  # this is for finding parent relations
           unless v.nil?
             # pass in the class of record_obj - we just need a clean/fresh class object
             # because we are dealing with a 'parent' record, we just need to use the same
@@ -329,7 +330,6 @@ module Mound
             resolved_val = _resolve_ids(key, v, 'OR', record_obj.class)
             key = key + '_id'
           end
-        
         elsif key.match /^_all$/
 
           # we are going to update all items
@@ -637,9 +637,9 @@ module Mound
             special_columns.each do |c|
               if ar.attributes.include? c
 
-                keys = keys.keep_if { |k| 
+                keys = keys.keep_if { |k|
                   $stderr.puts  __LINE__.to_s + " TRACE: #{ar.class}" if self.debug > 4
-                  special_search_column_logic.call(k, ar.column_for_attribute(c).type, c, val, ar) 
+                  special_search_column_logic.call(k, ar.column_for_attribute(c).type, c, val, ar)
                 }
 
               end
@@ -651,7 +651,7 @@ module Mound
           ###########
           # Arel Related Testing
           
-          arel_relation = keys.map{|key| 
+          arel_relation = keys.map{|key|
             obj.arel_table[key.to_sym].eq(val)
           }.inject{|result,item| result.or(item) }
           
@@ -744,6 +744,39 @@ module Mound
           end
         }
 
+      end
+      
+      if options[:parent_columns]
+        has_errors = false
+        
+        if options[:parent_columns].is_a? Array or options[:parent_columns].is_a? Regexp
+          if options[:parent_columns].is_a? Array
+            options[:parent_columns].each{|pc|
+              unless pc.is_a? Regexp
+                has_errors = true
+              end
+            }
+            
+            unless has_errors
+              parent_columns = options[:parent_columns]
+            end
+            
+          else
+            # looks like a bare-metal Regexp; wrap it in an array
+            parent_columns = [options[:parent_columns]]
+          end
+          
+          self.parent_columns = parent_columns
+        else
+          has_errors = true
+        end
+        
+        if has_errors
+          raise "Option 'parent_columns' should be an array of Regexps"
+        end
+        
+      else
+        self.parent_columns = [/^parent$/]
       end
 
       if options[:exclude_columns]
