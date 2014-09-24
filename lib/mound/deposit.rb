@@ -204,7 +204,7 @@ module Mound
             begin
               
               name = key.singularize.camelize
-              $stderr.print "     + Working on #{name}".widthize(48) + "(#{dat.count} objects)  ".color(:yellow) if self.debug > 1
+              $stderr.print "     + Working on #{name}".widthize(48) + "(#{dat.count} objects)  " if self.debug > 1
 
               # Get the class object for the class named 'name'.
               obj = _constantize(name)
@@ -551,7 +551,7 @@ module Mound
 
       unless ret.size == 1
         raise "ERROR: Attempting to locate a single #{obj.class} returned #{ret.size}, should be only 1\n\n" +
-              "Complete Information: key => '#{key}',\n string_keys => '#{string_keys.inspect}',\n integer_keys => '#{integer_keys.inspect}',\n val => '#{val.inspect}',\n obj => '#{obj.inspect}'\n sql => '#{arel_query_string}'\n ret => '#{ret.inspect}' ".color(:red).bright
+              "Complete Information: key => '#{key}',\n string_keys => '#{string_keys.inspect}',\n integer_keys => '#{integer_keys.inspect}',\n val => '#{val.inspect}',\n obj => '#{obj.inspect}'\n sql => '#{arel_query_string}'\n ret => '#{ret.inspect}' "
       end
 
       # hand back the result of the query.
@@ -672,7 +672,7 @@ module Mound
             val = val_obj.first.id
           else
 
-            message = "ERROR:\n\n".color(:red).bright
+            message = "ERROR:\n\n"
             message << "The following query returned #{val_obj.count} records:\n\n"
             message << val_obj.to_sql
             message << "\n\n"
