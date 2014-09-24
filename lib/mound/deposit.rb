@@ -320,7 +320,7 @@ module Mound
           # and the method to set the collection using explicit primary ids is agg_data_var_group_ids
           resolved_val = subkeys
 
-        elsif key.match /^parent$/
+        elsif key.match /^parent$/ or key.match /area_reference_variable$/
           unless v.nil?
             # pass in the class of record_obj - we just need a clean/fresh class object
             # because we are dealing with a 'parent' record, we just need to use the same
@@ -329,7 +329,7 @@ module Mound
             resolved_val = _resolve_ids(key, v, 'OR', record_obj.class)
             key = key + '_id'
           end
-
+        
         elsif key.match /^_all$/
 
           # we are going to update all items
