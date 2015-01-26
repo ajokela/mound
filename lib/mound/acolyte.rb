@@ -76,9 +76,15 @@ module Mound
       
         spinner = Thread.new do
           while iter do  # Keep spinning until told otherwise
-            $stderr.print chars[(iter+=1) % chars.length]
-            sleep delay
-            $stderr.print "\b"
+            if iter.is_a? Fixnum
+              begin
+                $stderr.print chars[(iter+=1) % chars.length]
+                sleep delay
+                $stderr.print "\b"
+              rescue 
+                
+              end
+            end
           end
         end
     
