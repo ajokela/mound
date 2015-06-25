@@ -12,6 +12,7 @@ class RablTest < ActiveSupport::TestCase
                   :cache_enabled => true,
                   :debug => 9,
                   :search_columns => { :code => true, :mnemonic => true, :label => true, :name => true },
+                  :guaranteed_non_self_referencing => true
                  )
 
     ds.scoop

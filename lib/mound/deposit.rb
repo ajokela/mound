@@ -112,7 +112,7 @@ module Mound
 
     attr_accessor :data, :objects, :exclude_columns, :search_columns, :special_search_column_logic, :special_columns
     attr_accessor :issues, :options, :debug, :dry_run, :cache_enabled, :transaction_enable
-    attr_accessor :parent_columns
+    attr_accessor :parent_columns, :guaranteed_non_self_referencing
 
     VALID_OPERS = {:or => true, :and => true}
     SPECIAL_KEYS = {'_config' => true, 'post_build' => true}
@@ -252,11 +252,31 @@ module Mound
 
       $stderr.puts "Data for instances of #{obj}: \n\n" + dat.inspect + "\n\n" if self.debug > 3
 
-      dat.each do |row|
-        ar = obj.new
-        _load_single_instance(ar, row, cache)
-      end
+      unless self.guaranteed_non_self_referencing
+        dat.each do |row|
+          ar = obj.new
+          _load_single_instance(ar, row, cache)
+        end
+      else
+        
+        thread_count = ActiveRecord::Base.connection_pool.instance_eval { @size } - 1   # one less than max pool size
+        slices = dat.each_slice(thread_count).to_a
+        
+        workers = slices.map{|slice|
+          Thread.new(slice){
 
+            Thread.current.thread_variable_set(:ar, obj.new)
+            slice.each{|row|
+              _load_single_instance(Thread.current.thread_variable_get(:ar), row, cache)
+            }
+            
+          }
+        }
+        
+        workers.each{|t| t.join}
+        
+      end
+      
     end
 
     # Load a single record for one entity type.
@@ -805,6 +825,12 @@ module Mound
         self.dry_run = options[:dry_run]
       else
         self.dry_run = false
+      end
+
+      if options[:guaranteed_non_self_referencing]
+        self.guaranteed_non_self_referencing = options[:guaranteed_non_self_referencing].to_s.to_bool
+      else
+        self.guaranteed_non_self_referencing = false
       end
 
       unless ENV['TRANSACTION_ENABLE'].nil?
