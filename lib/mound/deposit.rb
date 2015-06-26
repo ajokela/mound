@@ -259,7 +259,7 @@ module Mound
         end
       else
         
-        thread_count = ActiveRecord::Base.connection_pool.instance_eval { @size } - 1   # one less than max pool size
+        thread_count = 4 #ActiveRecord::Base.connection_pool.instance_eval { @size } - 1   # one less than max pool size
         slices = dat.each_slice(thread_count).to_a
         
         workers = slices.map{|slice|
