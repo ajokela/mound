@@ -124,9 +124,9 @@ module Mound
 
       preloaded_data = {}
 
-      Mound::Utilities.wait_spinner {
+      #Mound::Utilities.wait_spinner {
         self.data = File.open(self.options[:file], 'r:UTF-8'){|f| YAML.load_stream(f) }.first
-      }
+      #}
 
       path = File.dirname(File.expand_path(self.options[:file]))
 
@@ -214,9 +214,9 @@ module Mound
               $stderr.puts "#{e}" if self.debug > 1
             end
 
-            Mound::Utilities.wait_spinner(self.debug) {
+            #Mound::Utilities.wait_spinner(self.debug) {
               _load_data(dat, obj)
-            }
+            #}
 
             $stderr.puts '' if self.debug > 1
 
