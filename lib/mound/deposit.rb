@@ -259,13 +259,17 @@ module Mound
         end
       else
         
-        thread_count = 4 #ActiveRecord::Base.connection_pool.instance_eval { @size } - 1   # one less than max pool size
-        slices = dat.each_slice(thread_count).to_a
+        number_of_threads = 4 #ActiveRecord::Base.connection_pool.instance_eval { @size } - 1   # one less than max pool size
+        sc = dat.count
+        total_range = (0...sc)
         
+        slices = total_range.each_slice((total_range.count.to_f/number_of_threads.to_f).ceil.to_i).to_a
+          
         workers = slices.map{|slice|
           Thread.new(slice){
 
             Thread.current.thread_variable_set(:ar, obj.new)
+            
             slice.each{|row|
               _load_single_instance(Thread.current.thread_variable_get(:ar), row, cache)
             }
