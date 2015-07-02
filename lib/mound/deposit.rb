@@ -259,7 +259,7 @@ module Mound
         end
       else
         
-        number_of_threads = 4 #ActiveRecord::Base.connection_pool.instance_eval { @size } - 1   # one less than max pool size
+        number_of_threads = 2 #ActiveRecord::Base.connection_pool.instance_eval { @size } - 1   # one less than max pool size
         sc = dat.count
         total_range = (0...sc)
         
