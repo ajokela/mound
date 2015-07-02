@@ -823,7 +823,7 @@ module Mound
       if options[:cache_enabled]
         self.cache_enabled = options[:cache_enabled]
       else
-        self.cache_enabled = false
+        self.cache_enabled = true
       end
 
       if options[:dry_run]
