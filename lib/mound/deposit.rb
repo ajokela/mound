@@ -269,7 +269,7 @@ module Mound
         
         workers = slices.map{|slice|
           Thread.new(slice){
-
+            $stderr.puts " *** THREAD: [#{Thread.current.object_id}] has #{slice.count} objects "
             slice.each{|idx|
               ar = obj.new
               _load_single_instance(ar, dat[idx], cache)
