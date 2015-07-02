@@ -264,14 +264,15 @@ module Mound
         total_range = (0...sc)
         
         slices = total_range.each_slice((total_range.count.to_f/number_of_threads.to_f).ceil.to_i).to_a
-          
+        
+        #$stderr.puts "==> #{slices.inspect}"
+        
         workers = slices.map{|slice|
           Thread.new(slice){
 
-            Thread.current.thread_variable_set(:ar, obj.new)
-            
-            slice.each{|row|
-              _load_single_instance(Thread.current.thread_variable_get(:ar), row, cache)
+            slice.each{|idx|
+              ar = obj.new
+              _load_single_instance(ar, dat[idx], cache)
             }
             
           }
