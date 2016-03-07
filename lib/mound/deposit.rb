@@ -110,8 +110,8 @@ module Mound
 
   class Deposit
 
-    attr_accessor :data, :objects, :exclude_columns, :search_columns, :special_search_column_logic, :special_columns
-    attr_accessor :issues, :options, :debug, :dry_run, :cache_enabled, :transaction_enable
+    attr_accessor :data, :objects, :exclude_columns, :search_columns, :special_search_column_logic, :special_columns, :delete_all, :execute_sql_first
+    attr_accessor :issues, :options, :debug, :dry_run, :cache_enabled, :transaction_enable, :numeric_column_types
     attr_accessor :parent_columns, :guaranteed_non_self_referencing
 
     VALID_OPERS = {:or => true, :and => true}
@@ -196,6 +196,15 @@ module Mound
 
         $stderr.puts '' if self.debug > 1
 
+        if self.execute_sql_first and self.delete_all
+
+          self.execute_sql_first.each{|sql|
+            $stderr.puts "Executing: " + sql if self.debug == -2
+            ActiveRecord::Base.connection.execute(sql)
+          }
+          
+        end
+
         data.each do |key, dat|
 
           unless SPECIAL_KEYS.include? key
@@ -212,6 +221,10 @@ module Mound
 
             rescue Exception => e
               $stderr.puts "#{e}" if self.debug > 1
+            end
+            
+            if self.delete_all
+              obj.delete_all
             end
 
             #Mound::Utilities.wait_spinner(self.debug) {
@@ -238,6 +251,33 @@ module Mound
       end
       
       @@mutex.synchronize do
+
+        #if Object.constants.include?("#{class_name}".to_sym)
+        #  $stderr.puts ">> Constant #{class_name} already is loaded..."
+          #Object.send(:remove_const, "#{$1}".to_sym)
+          #Object.instance_eval { remove_const("#{class_name}".to_sym) }
+          
+        #end
+        
+        #filename = "#{class_name}".underscore.singularize + ".rb"
+        #found = false
+        #search_path = ActiveSupport::Dependencies.autoload_paths
+        
+        #while(not found and search_path.count > 0)
+        #  path = search_path.pop
+        #  
+        #  file_path = File.join(path, filename)
+        #  
+        #  $stderr.puts "Looking in #{path} for #{filename}"
+          
+        #  if File.exist? file_path
+        #    found = true
+        #   $stderr.puts "Found #{filename} at #{file_path}; reloading"
+        #    require filename
+        #  end
+        #  
+        #end
+        
         Object.module_eval("::#{$1}", __FILE__, __LINE__)
       end
       
@@ -320,7 +360,7 @@ module Mound
               $stderr.puts(__LINE__.to_s + ' ' + "TRACE: foreign_table is nil") if self.debug > 4
               resolved_val = _resolve_ids(key, v)
             else
-              $stderr.puts(__LINE__.to_s + ' ' + "TRACE: #{key} points to foreign key #{foreign_table}") if self.debug > 2
+              $stderr.puts(__LINE__.to_s + ' ' + "TRACE: #{key} points to foreign key #{foreign_table}") if self.debug == -2
               foreign_table_id = foreign_table.underscore + '_id'
               $stderr.puts(__LINE__.to_s + ' ' + "TRACE: Trying to resolve #{key} as if it were #{foreign_table_id}") if self.debug > 1
               resolved_val = _resolve_ids(foreign_table_id, v)
@@ -423,9 +463,9 @@ module Mound
       
       $stderr.puts(__LINE__.to_s + ' ' + "TRACE: resolve_compound_keys -------- \n\n\n\n") if self.debug > 4
 
-      $stderr.puts(__LINE__.to_s + ' ' + "key: #{key.to_s}") if self.debug > 4
-      $stderr.puts(__LINE__.to_s + ' ' + "obj: #{obj.to_s}") if self.debug > 4
-      $stderr.puts(__LINE__.to_s + ' ' + "val: #{val.to_s}") if self.debug > 4
+      $stderr.puts(__LINE__.to_s + ' ' + "key: #{key.to_s}") if self.debug == -2
+      $stderr.puts(__LINE__.to_s + ' ' + "obj: #{obj.to_s}") if self.debug == -2
+      $stderr.puts(__LINE__.to_s + ' ' + "val: #{val.to_s}") if self.debug == -2
       
       string_vals = []
       integer_vals = []
@@ -455,27 +495,32 @@ module Mound
           # If that's the case, go look up the subkey now.
 
           item.each { |item_k, item_v|
-            $stderr.puts "\n\n====> item_k: #{item_k} | item_v: #{item_v}\n\n" if self.debug > 4
+            $stderr.puts "\n\n" + __LINE__.to_s + "====> item_k: #{item_k} | item_v: #{item_v}\n\n" if self.debug > 4
             returned_id = _resolve_ids(item_k, item_v)
             keyed_vals[item_k] = returned_id
-            $stderr.puts "====> item_ret: #{returned_id}" if self.debug > 4
+            $stderr.puts __LINE__.to_s + "====> item_ret: #{returned_id}" if self.debug > 4
           }
 
         end
       }
 
-      $stderr.puts(__LINE__.to_s + " TRACE: string_vals: #{string_vals.to_s}") if self.debug > 4
-      $stderr.puts(__LINE__.to_s + " TRACE: integer_vals: #{integer_vals.to_s}") if self.debug > 4
+      $stderr.puts(__LINE__.to_s + " TRACE: string_vals: #{string_vals.to_s}") if self.debug == -2
+      $stderr.puts(__LINE__.to_s + " TRACE: integer_vals: #{integer_vals.to_s}") if self.debug == -2
 
       ar = obj.new
 
-      potential_key_columns = ar.attributes.keys.keep_if { |column| column.match(exclude_columns).nil? }
+      #potential_key_columns = ar.attributes.keys.keep_if { |column| column.match(exclude_columns).nil? }
+
+      potential_key_columns = obj.columns.map{|c| c.name }.keep_if { |column| column.match(exclude_columns).nil? }
+
+      $stderr.puts(__LINE__.to_s + " TRACE: [#{obj.to_s}]->attributes: #{potential_key_columns.join(', ')}") if self.debug == -2
+      $stderr.puts(__LINE__.to_s + " TRACE: [#{obj.to_s}]->columns:    #{obj.columns.map{|c| c.name }.join(', ')}") if self.debug == -2
 
       # find the potential_key_columns that are typed as integer or as string,
       # except for the primary key column (id) itself and other integer foreign keys (which should end with _id)
       # Note that we can't preclude all columns that end in _id, because we want to keep columns like
       # sample_id on terrapop_samples, which is a varchar.
-      integer_keys = potential_key_columns.find_all { |pk| !(pk == 'id' or pk.end_with?('_id')) and obj.columns.find { |c| c.name == pk }.type == :integer }
+      integer_keys = potential_key_columns.find_all { |pk| !(pk == 'id' or pk.end_with?('_id')) and self.numeric_column_types.include? obj.columns.find{ |c| c.name == pk }.type }
       string_keys = potential_key_columns.find_all { |pk| obj.columns.find { |c| c.name == pk }.type == :string }
 
       # build up permutations of potential key matches We assume that there are more potential columns than there are values given.
@@ -494,8 +539,9 @@ module Mound
       # (str_key2 = strval1 AND str_key1 = strval2 AND intkey1 = intval2 AND intkey2=intval1))
       # AND foreign_key_id = keyval1
 
-      $stderr.puts __LINE__.to_s + " TRACE: arel_str_clauses: #{arel_str_clauses.inspect}" if self.debug > 10
-
+      $stderr.puts __LINE__.to_s + " TRACE: arel_str_clauses: #{arel_str_clauses.inspect}" if self.debug == -2
+      $stderr.puts __LINE__.to_s + " TRACE: arel_int_clauses: #{arel_int_clauses.inspect}" if self.debug == -2
+      
       key_clause = nil
       final_arel_clauses = nil
       arel_clause_groups = []
@@ -575,7 +621,7 @@ module Mound
       end
 
       unless ret.size == 1
-        raise "ERROR: Attempting to locate a single #{obj.class} returned #{ret.size}, should be only 1\n\n" +
+        raise "ERROR: Attempting to locate a single #{obj.to_s} returned #{ret.size}, should be only 1\n\n" +
               "Complete Information: key => '#{key}',\n string_keys => '#{string_keys.inspect}',\n integer_keys => '#{integer_keys.inspect}',\n val => '#{val.inspect}',\n obj => '#{obj.inspect}'\n sql => '#{arel_query_string}'\n ret => '#{ret.inspect}' "
       end
 
@@ -842,9 +888,26 @@ module Mound
         self.transaction_enable = ENV['TRANSACTION_ENABLE'].is_bool? ? ENV['TRANSACTION_ENABLE'].to_bool : true
       end
 
+      if options[:delete_all]
+        self.delete_all = options[:delete_all].to_s.to_bool
+      else
+        self.delete_all = false
+      end
+      
+      if options[:execute_sql_first]
+        self.execute_sql_first = options[:execute_sql_first]
+      else
+        self.execute_sql_first = false
+      end
 
       if self.dry_run
         $stderr.puts "\n\nDry Run Enabled\n\n".bright
+      end
+
+      if options[:numeric_column_types]
+        self.numeric_column_types = options[:numeric_column_types]
+      else
+        self.numeric_column_types = [:integer]
       end
 
       options
