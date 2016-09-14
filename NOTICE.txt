@@ -1,0 +1,8 @@
+Human-Readable Bulk In-loading of YAML-based Relational Data
+https://github.com/mnpopcenter/mound
+
+Copyright 2012-2016 Regents of the University of Minnesota
+
+This project is licensed under the Mozilla Public License, version 2.0 (the
+"License"). A copy of the License is in the project file "LICENSE.md",
+and is also available at https://www.mozilla.org/en-US/MPL/2.0/.
